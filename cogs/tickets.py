@@ -180,11 +180,11 @@ class PingButton(
                 f"🔔 You have a notification in your ticket: <#{self.channel_id}>"
             )
             await interaction.response.send_message(
-                f"{EMOJI['ping']} Pinged {customer.mention} via DM.", ephemeral=True
+                f"{EMOJI['ping']} Pinged {customer.mention} in DM.", ephemeral=True
             )
         except discord.Forbidden:
             await interaction.response.send_message(
-                "Could not DM this user — their DMs may be closed.", ephemeral=True
+                "Could not DM this user their DMs may be closed.", ephemeral=True
             )
 
 
@@ -197,7 +197,7 @@ class CloseButton(
         super().__init__(
             discord.ui.Button(
                 label="Close",
-                style=discord.ButtonStyle.danger,
+                style=discord.ButtonStyle.secondary,
                 emoji=EMOJI["close"],
                 custom_id=f"ticket:close:{channel_id}",
             )
@@ -270,7 +270,7 @@ class TicketPanelView(discord.ui.LayoutView):
         purchase_btn.callback = self.on_purchase
 
         order_btn = discord.ui.Button(
-            label="Order Support",
+            label="Order ",
             style=discord.ButtonStyle.primary,
             emoji=EMOJI["order"],
             custom_id="ticket:open:order",
@@ -285,7 +285,7 @@ class TicketPanelView(discord.ui.LayoutView):
                 )
             )
 
-        header_text = discord.ui.TextDisplay(f"{EMOJI['bot']} **Bot Shop — Ticket Center**")
+        header_text = discord.ui.TextDisplay(f"{EMOJI['bot']} **GlobalBots Parchase Center**")
         body_text = discord.ui.TextDisplay(
             "Need a bot, or have a question about an order?\n"
             "Pick an option below and we'll take care of you."
@@ -405,7 +405,7 @@ class PurchaseModal(discord.ui.Modal, title="Purchase"):
     )
     budget = discord.ui.TextInput(
         label="What's your budget?",
-        placeholder="e.g. $50",
+        placeholder="e.g. $30",
         max_length=100,
     )
     payment_method = discord.ui.TextInput(
