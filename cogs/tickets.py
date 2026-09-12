@@ -18,12 +18,12 @@ from utils.transcripts import build_transcript
 SUPPORT_KINDS = {"owner", "general", "technical", "billing"}
 
 TICKET_TITLES = {
-    "purchase": "🛒 Purchase Ticket",
-    "order": "🎧 Order Ticket",
-    "owner": "👑 Contact Owner Ticket",
-    "general": "🎧 General Support Ticket",
-    "technical": "🛠️ Technical Issue Ticket",
-    "billing": "💳 Billing Issue Ticket",
+    "purchase": "Purchase Ticket",
+    "order": "Order Ticket",
+    "owner": "Contact Owner Ticket",
+    "general": "General Support Ticket",
+    "technical": "Technical Issue Ticket",
+    "billing": "Billing Issue Ticket",
 }
 
 TICKET_ACCENT_COLOURS = {
@@ -314,10 +314,37 @@ class TicketPanelView(discord.ui.LayoutView):
         self.add_item(container)
 
     async def on_purchase(self, interaction: discord.Interaction) -> None:
-        await interaction.response.send_modal(PurchaseModal())
+        from cogs.purchase_order_flow import start_purchase_flow
+        await start_purchase_flow(interaction)
 
     async def on_order(self, interaction: discord.Interaction) -> None:
-        await create_ticket_channel(interaction, kind="order", fields=None)
+        from cogs.purchase_order_flow import start_order_flow
+        await start_order_flow(interaction)
+
+
+def format_ticket_details(kind: str, fields: dict[str, str] | None) -> str:
+    if not fields:
+        return "Please describe what you need below — a member of staff will be with you shortly."
+
+    if kind == "purchase":
+        return (
+            f"{EMOJI['bot']} **Type of bot:** {fields.get('bot_type', '-')}\n"
+            f"📦 **Plan:** {fields.get('plan', '-')}\n"
+            f"{EMOJI['payment']} **Payment Method:** {fields.get('payment_method', '-')}"
+        )
+
+    if kind == "order":
+        return (
+            f"🖥️ **Server:** {fields.get('server', '-')}\n"
+            f"{EMOJI['budget']} **Budget:** {fields.get('budget', '-')}\n"
+            f"{EMOJI['payment']} **Payment Method:** {fields.get('payment_method', '-')}\n\n"
+            f"**Description:**\n{fields.get('description', '-')}"
+        )
+
+    if fields.get("description"):
+        return f"**Description:**\n{fields['description']}"
+
+    return "Please describe what you need below — a member of staff will be with you shortly."
 
 
 def build_ticket_control_view(
@@ -334,19 +361,7 @@ def build_ticket_control_view(
     # discord.ui.Section allows at most 3 text children, so the details are
     # grouped into a single block instead of one TextDisplay per line.
     header = discord.ui.TextDisplay(f"**{title}**\nCustomer: {customer.mention}")
-
-    if kind == "purchase" and fields:
-        details = discord.ui.TextDisplay(
-            f"{EMOJI['bot']} **Type of bot:** {fields.get('bot_type', '-')}\n"
-            f"{EMOJI['budget']} **Budget:** {fields.get('budget', '-')}\n"
-            f"{EMOJI['payment']} **Payment Method:** {fields.get('payment_method', '-')}"
-        )
-    elif fields and fields.get("description"):
-        details = discord.ui.TextDisplay(f"**Description:**\n{fields['description']}")
-    else:
-        details = discord.ui.TextDisplay(
-            "Please describe what you need below — a member of staff will be with you shortly."
-        )
+    details = discord.ui.TextDisplay(format_ticket_details(kind, fields))
 
     texts = [header, details]
     if claimed_by:
@@ -401,32 +416,6 @@ async def refresh_ticket_panel(channel: discord.abc.Messageable, bot: discord.Cl
 # Modals
 # --------------------------------------------------------------------------
 
-class PurchaseModal(discord.ui.Modal, title="Purchase"):
-    bot_type = discord.ui.TextInput(
-        label="What type of bot do you need?",
-        placeholder="e.g. Moderation bot, Roleplay bot, Security Bot...",
-        max_length=200,
-    )
-    budget = discord.ui.TextInput(
-        label="What's your budget?",
-        placeholder="e.g. $50",
-        max_length=100,
-    )
-    payment_method = discord.ui.TextInput(
-        label="Preferred payment method",
-        placeholder="We only except paypal & paysafe",
-        max_length=100,
-    )
-
-    async def on_submit(self, interaction: discord.Interaction) -> None:
-        fields = {
-            "bot_type": self.bot_type.value,
-            "budget": self.budget.value,
-            "payment_method": self.payment_method.value,
-        }
-        await create_ticket_channel(interaction, kind="purchase", fields=fields)
-
-
 class CloseReasonModal(discord.ui.Modal, title="Close Ticket"):
     reason = discord.ui.TextInput(
         label="Reason for closing",
@@ -464,7 +453,7 @@ async def create_ticket_channel(
         "Creating your ticket...", ephemeral=True
     )
 
-    category_id = config.SUPPORT_CATEGORY if kind in SUPPORT_KINDS else config.TICKET_CATEGORY
+    category_id = config.TICKET_CATEGORIES.get(kind, config.TICKET_CATEGORY)
     category = guild.get_channel(category_id)
     channel_name = f"{safe_name(customer.display_name)}-{kind}"
 
@@ -563,16 +552,9 @@ async def log_ticket_open(
         f"**Type:** {kind.title()} — **Channel:** {channel.mention}"
     )
     texts = [header]
-    if kind == "purchase" and fields:
-        texts.append(
-            discord.ui.TextDisplay(
-                f"**Bot type:** {fields.get('bot_type', '-')}\n"
-                f"**Budget:** {fields.get('budget', '-')}\n"
-                f"**Payment method:** {fields.get('payment_method', '-')}"
-            )
-        )
-    elif fields and fields.get("description"):
-        texts.append(discord.ui.TextDisplay(f"**Description:**\n{fields['description']}"))
+    details_text = format_ticket_details(kind, fields)
+    if fields:
+        texts.append(discord.ui.TextDisplay(details_text))
     section = discord.ui.Section(
         *texts, accessory=discord.ui.Thumbnail(media=customer.display_avatar.url)
     )
