@@ -57,7 +57,7 @@ class SupportPanelView(discord.ui.LayoutView):
 
         children.append(discord.ui.Separator())
 
-        title_text = discord.ui.TextDisplay(f"# {EMOJI['support_title']} *GlobaBots Support Center*")
+        title_text = discord.ui.TextDisplay(f"# {EMOJI['support_title']} *GlobalBots Support Center*")
         intro_text = discord.ui.TextDisplay(
             "**Welcome to our Support Center.**\n"
             "__Choose the category that best matches what you need help with.__"
