@@ -40,7 +40,6 @@ async def main():
         await bot.load_extension("cogs.giveaways")
         await bot.load_extension("cogs.reviews")
         await bot.load_extension("cogs.suggestions")
-        await bot.load_extension("cogs.purchase_order_flow")
         await bot.load_extension("cogs._raw_purchase_panel_reference")
         await bot.start(config.BOT_TOKEN)
 
