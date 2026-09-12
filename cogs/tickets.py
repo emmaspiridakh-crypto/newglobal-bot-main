@@ -18,12 +18,12 @@ from utils.transcripts import build_transcript
 SUPPORT_KINDS = {"owner", "general", "technical", "billing"}
 
 TICKET_TITLES = {
-    "purchase": "Purchase Ticket",
-    "order": "Order Ticket",
-    "owner": "Contact Owner Ticket",
-    "general": "General Support Ticket",
-    "technical": "Technical Issue Ticket",
-    "billing": "Billing Issue Ticket",
+    "purchase": f"{EMOJI['purchase']} Purchase Ticket",
+    "order": f"{EMOJI['order']} Order Ticket",
+    "owner": f"{EMOJI['support_owner']} Contact Owner Ticket",
+    "general": f"{EMOJI['support_general']} General Support Ticket",
+    "technical": f"{EMOJI['support_technical']} Technical Issue Ticket",
+    "billing": f"{EMOJI['support_billing']} Billing Issue Ticket",
 }
 
 TICKET_ACCENT_COLOURS = {
@@ -181,7 +181,7 @@ class PingButton(
 
         try:
             await customer.send(
-                f"🔔 You have a notification in your ticket: <#{self.channel_id}>"
+                f"{EMOJI['ping']} You have a notification in your ticket: <#{self.channel_id}>"
             )
             await interaction.response.send_message(
                 f"{EMOJI['ping']} Pinged {customer.mention} via DM.", ephemeral=True
@@ -329,13 +329,13 @@ def format_ticket_details(kind: str, fields: dict[str, str] | None) -> str:
     if kind == "purchase":
         return (
             f"{EMOJI['bot']} **Type of bot:** {fields.get('bot_type', '-')}\n"
-            f"📦 **Plan:** {fields.get('plan', '-')}\n"
+            f"{EMOJI['plan']} **Plan:** {fields.get('plan', '-')}\n"
             f"{EMOJI['payment']} **Payment Method:** {fields.get('payment_method', '-')}"
         )
 
     if kind == "order":
         return (
-            f"🖥️ **Server:** {fields.get('server', '-')}\n"
+            f"{EMOJI['server']} **Server:** {fields.get('server', '-')}\n"
             f"{EMOJI['budget']} **Budget:** {fields.get('budget', '-')}\n"
             f"{EMOJI['payment']} **Payment Method:** {fields.get('payment_method', '-')}\n\n"
             f"**Description:**\n{fields.get('description', '-')}"
