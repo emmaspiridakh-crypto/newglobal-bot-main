@@ -70,7 +70,7 @@ class PurchasePanelView(ui.LayoutView):
                 ),
             ),
             ui.TextDisplay(
-                "-# <:name:1545576625574387762> Opening tickets without a reason may result in a warning.\n"
+                "-# <a:name:1545576625574387762> Opening tickets without a reason may result in a warning.\n"
                 "-# <:name:1545831836339409048> GlobalBots All Rights Reserved ©"
             ),
             ui.Separator(visible=True, spacing=discord.SeparatorSpacing.small),
