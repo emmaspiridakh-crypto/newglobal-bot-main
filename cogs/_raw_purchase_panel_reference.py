@@ -47,16 +47,16 @@ class PurchasePanelView(ui.LayoutView):
             ui.Separator(visible=True, spacing=discord.SeparatorSpacing.large),
             ui.Section(
                 ui.TextDisplay(
-                    "**<:name:1545576267904974859>__Purchase an Existing Bot: __**\n"
-                    "> -# Select the ready made bot that fits your requirements and open a ticket to buy it."
+                    "**# <:name:1545576267904974859>__Purchase an Existing Bot: __**\n"
+                    "> Select the ready made bot that fits your requirements and open a ticket to buy it."
                 ),
                 accessory=purchase_btn,
             ),
             ui.Separator(visible=True, spacing=discord.SeparatorSpacing.large),
             ui.Section(
                 ui.TextDisplay(
-                    "<:name:1545576267904974859> __**Order a Custom Bot: **__\n"
-                    "> -#  Share your thoughts and desired features with us, and let us design your dream bot."
+                    "# <:name:1545576267904974859> __**Order a Custom Bot: **__\n"
+                    "> Share your thoughts and desired features with us, and let us design your dream bot."
                 ),
                 accessory=order_btn,
             ),
