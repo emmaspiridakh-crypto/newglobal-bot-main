@@ -29,6 +29,11 @@ GENERAL = {
     "support_process": "<:name:1545578059820826745>",
     "support_step": "<a:name:1545552914334875800>",
     "support_warning": "<a:name:1545576625574387762>",
+    "check": "<:name:1544994894370578474>",
+    "cancel": "<:name:1545364084499808256>",
+    "send": "<a:name:1545552914334875800>",
+    "plan": "<:name:1548349637918728232>",
+    "server": "<:name:1545576824380067860>",
 }
 
 SUGGESTIONS = {
