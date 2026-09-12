@@ -169,10 +169,10 @@ class OrderConfirmView(discord.ui.LayoutView):
 # --------------------------------------------------------------------------
 
 STATUS_TEXT = {
-    "pending": "⏳ **Pending**",
-    "accepted": "✅ **Accepted**",
-    "completed": "✔️ **Completed**",
-    "cancelled": "🚫 **Cancelled**",
+    "pending": f"{EMOJI['order_pending']} **Pending**",
+    "accepted": f"{EMOJI['order_accept']} **Accepted**",
+    "completed": f"{EMOJI['order_done']} **Completed**",
+    "cancelled": f"{EMOJI['order_cancel']} **Cancelled**",
 }
 
 
