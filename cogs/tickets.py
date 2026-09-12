@@ -52,13 +52,17 @@ def is_staff(member: discord.Member, kind: str | None = None) -> bool:
 
 
 def safe_name(name: str) -> str:
-    """Turns a display name into something usable in a channel name."""
-    cleaned = re.sub(r"[^a-zA-Z0-9-]", "-", name.lower()).strip("-")
+    """Turns a display name into something usable in a channel name.
+    Keeps letters from any script (Greek included), not just a-z."""
+    cleaned = re.sub(r"[\s_]+", "-", name.strip().lower())
+    cleaned = re.sub(r"[^\w\-]", "", cleaned, flags=re.UNICODE)
+    cleaned = re.sub(r"-{2,}", "-", cleaned).strip("-")
     return cleaned or "customer"
 
 
-async def get_log_channel(guild: discord.Guild) -> discord.TextChannel | None:
-    channel = guild.get_channel(config.CHANNEL_LOG)
+async def get_log_channel(guild: discord.Guild, kind: str | None = None) -> discord.TextChannel | None:
+    channel_id = config.SUPPORT_LOG_CHANNEL if kind in SUPPORT_KINDS else config.CHANNEL_LOG
+    channel = guild.get_channel(channel_id)
     return channel if isinstance(channel, discord.TextChannel) else None
 
 
@@ -180,11 +184,11 @@ class PingButton(
                 f"🔔 You have a notification in your ticket: <#{self.channel_id}>"
             )
             await interaction.response.send_message(
-                f"{EMOJI['ping']} Pinged {customer.mention} in DM.", ephemeral=True
+                f"{EMOJI['ping']} Pinged {customer.mention} via DM.", ephemeral=True
             )
         except discord.Forbidden:
             await interaction.response.send_message(
-                "Could not DM this user their DMs may be closed.", ephemeral=True
+                "Could not DM this user — their DMs may be closed.", ephemeral=True
             )
 
 
@@ -197,7 +201,7 @@ class CloseButton(
         super().__init__(
             discord.ui.Button(
                 label="Close",
-                style=discord.ButtonStyle.secondary,
+                style=discord.ButtonStyle.danger,
                 emoji=EMOJI["close"],
                 custom_id=f"ticket:close:{channel_id}",
             )
@@ -270,7 +274,7 @@ class TicketPanelView(discord.ui.LayoutView):
         purchase_btn.callback = self.on_purchase
 
         order_btn = discord.ui.Button(
-            label="Order ",
+            label="Order Support",
             style=discord.ButtonStyle.primary,
             emoji=EMOJI["order"],
             custom_id="ticket:open:order",
@@ -285,7 +289,7 @@ class TicketPanelView(discord.ui.LayoutView):
                 )
             )
 
-        header_text = discord.ui.TextDisplay(f"{EMOJI['bot']} **GlobalBots Parchase Center**")
+        header_text = discord.ui.TextDisplay(f"{EMOJI['bot']} **Bot Shop — Ticket Center**")
         body_text = discord.ui.TextDisplay(
             "Need a bot, or have a question about an order?\n"
             "Pick an option below and we'll take care of you."
@@ -405,7 +409,7 @@ class PurchaseModal(discord.ui.Modal, title="Purchase"):
     )
     budget = discord.ui.TextInput(
         label="What's your budget?",
-        placeholder="e.g. $30",
+        placeholder="e.g. $50",
         max_length=100,
     )
     payment_method = discord.ui.TextInput(
@@ -472,7 +476,7 @@ async def create_ticket_channel(
     )
 
     view = build_ticket_control_view(channel.id, kind, customer, fields, claimed_by=None)
-    panel_message = await channel.send(content=customer.mention, view=view)
+    panel_message = await channel.send(view=view)
 
     await store.create(
         channel.id,
@@ -482,6 +486,10 @@ async def create_ticket_channel(
         claimed_by=None,
         panel_message_id=panel_message.id,
         opened_at=dt.datetime.utcnow().isoformat(),
+    )
+
+    await interaction.edit_original_response(
+        content=f"Your ticket has been created: {channel.mention}"
     )
 
     await log_ticket_open(guild, channel, customer, kind, fields)
@@ -543,7 +551,7 @@ async def log_ticket_open(
     kind: str,
     fields: dict[str, str] | None,
 ) -> None:
-    log_channel = await get_log_channel(guild)
+    log_channel = await get_log_channel(guild, kind)
     if log_channel is None:
         return
 
@@ -582,7 +590,7 @@ async def log_ticket_close(
     reason: str,
     transcript_path,
 ) -> None:
-    log_channel = await get_log_channel(guild)
+    log_channel = await get_log_channel(guild, kind)
     if log_channel is None:
         return
 
