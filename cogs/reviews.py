@@ -128,6 +128,7 @@ class ReviewPanelView(ui.LayoutView):
             title=f"{emoji('reviews', 'review')} Άφησε ένα Review",
             description="Πάτα το κουμπί από κάτω για να μοιραστείς την εμπειρία σου μαζί μας!",
             banner_url=config.REVIEWS_BANNER_URL or None,
+            thumbnail_url=config.REVIEWS_THUMBNAIL_URL or None,
         )
         add_separator(container)
         btn = ui.Button(
