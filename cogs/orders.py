@@ -9,17 +9,7 @@ from discord.ext import commands
 
 import config
 from utils.storage import store, order_store
-from cogs.tickets import is_staff, EMOJI
-
-
-def format_order_details(kind: str, fields: dict | None) -> str:
-    if kind == "purchase" and fields:
-        return (
-            f"{EMOJI['bot']} **Type of bot:** {fields.get('bot_type', '-')}\n"
-            f"{EMOJI['budget']} **Budget:** {fields.get('budget', '-')}\n"
-            f"{EMOJI['payment']} **Payment Method:** {fields.get('payment_method', '-')}"
-        )
-    return "Order — see the ticket channel for details."
+from cogs.tickets import is_staff, EMOJI, format_ticket_details as format_order_details
 
 
 # --------------------------------------------------------------------------
@@ -345,6 +335,26 @@ async def refresh_order_panel(order: dict, guild: discord.Guild) -> None:
     await message.edit(view=build_order_panel_view(order, guild))
 
 
+async def send_order_dm(
+    guild: discord.Guild, order: dict, message: str, colour: discord.Colour
+) -> None:
+    """DMs the customer a panel about their order, mentioning the ticket channel."""
+    member = guild.get_member(order["customer_id"])
+    if member is None:
+        return
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(
+        discord.ui.Container(
+            discord.ui.TextDisplay(f"{message}\nTicket: <#{order['ticket_channel_id']}>"),
+            accent_colour=colour,
+        )
+    )
+    try:
+        await member.send(view=view)
+    except discord.Forbidden:
+        pass
+
+
 async def handle_accept(interaction: discord.Interaction, order_id: int) -> None:
     if not isinstance(interaction.user, discord.Member) or not is_staff(interaction.user):
         return await interaction.response.send_message("Only staff can accept orders.", ephemeral=True)
@@ -376,10 +386,11 @@ async def handle_accept(interaction: discord.Interaction, order_id: int) -> None
 
     member = guild.get_member(order["customer_id"])
     if member is not None:
-        try:
-            await member.send(f"{EMOJI['order_accept']} Your order has been accepted and is pending.")
-        except discord.Forbidden:
-            pass
+        await send_order_dm(
+            guild, order,
+            f"{EMOJI['order_accept']} **Your order has been accepted and is pending.**",
+            discord.Colour.blue(),
+        )
 
 
 async def handle_done(interaction: discord.Interaction, order_id: int) -> None:
@@ -400,10 +411,11 @@ async def handle_done(interaction: discord.Interaction, order_id: int) -> None:
 
     member = guild.get_member(order["customer_id"])
     if member is not None:
-        try:
-            await member.send(f"{EMOJI['order_done']} Your order has been completed.")
-        except discord.Forbidden:
-            pass
+        await send_order_dm(
+            guild, order,
+            f"{EMOJI['order_done']} **Your order has been completed.**",
+            discord.Colour.green(),
+        )
 
 
 async def handle_cancel(interaction: discord.Interaction, order_id: int) -> None:
@@ -420,6 +432,11 @@ async def handle_cancel(interaction: discord.Interaction, order_id: int) -> None
     await interaction.response.send_message(f"{EMOJI['order_cancel']} Order cancelled.", ephemeral=True)
     await refresh_order_panel(order, interaction.guild)
     await log_order_event(interaction.guild, order, "cancelled", interaction.user)
+    await send_order_dm(
+        interaction.guild, order,
+        f"{EMOJI['order_cancel']} **Your order has been cancelled.**",
+        discord.Colour.red(),
+    )
 
 
 # --------------------------------------------------------------------------
@@ -437,7 +454,7 @@ class Orders(commands.Cog):
                 "Only Developer, CEO or Co-CEO can use this.", ephemeral=True
             )
 
-        tickets = await store.list_all()
+        tickets = [t for t in await store.list_all() if t["kind"] == "order"]
         await interaction.response.send_message(
             view=TicketPickerView(tickets, interaction.guild), ephemeral=True
         )
