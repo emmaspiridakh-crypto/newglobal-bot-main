@@ -31,6 +31,24 @@ SUGGESTIONS_CHANNEL_ID: int = 1545533516878450708
 
 TICKET_CATEGORY: int = 1545575251864330270
 
+# Each ticket "kind" now gets its own category. Fill in real IDs — 0 falls
+# back to no category (channel created at the top level) until you do.
+CATEGORY_PURCHASE: int = 1545575251864330270
+CATEGORY_ORDER: int = 1548390952060723270
+CATEGORY_OWNER: int = 1548391395558039613
+CATEGORY_GENERAL: int = 1548346082767929519
+CATEGORY_TECHNICAL: int = 1548391613150138539
+CATEGORY_BILLING: int = 1548391218596020274
+
+TICKET_CATEGORIES: dict[str, int] = {
+    "purchase": CATEGORY_PURCHASE,
+    "order": CATEGORY_ORDER,
+    "owner": CATEGORY_OWNER,
+    "general": CATEGORY_GENERAL,
+    "technical": CATEGORY_TECHNICAL,
+    "billing": CATEGORY_BILLING,
+}
+
 # URLs used for the ticket panel (banner + thumbnail). Leave as None to skip.
 # The per-ticket panel inside each ticket channel only ever shows a
 # thumbnail (the customer's avatar) — no banner there, by design.
@@ -40,7 +58,8 @@ PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 # --- Support ticket system (Owner / General Support / Technical / Billing) ---
 # staff_roles is its own list of role IDs — fill it in yourself, it can
 # overlap with or differ from ROLE_DEVELOPER/ROLE_CEO/ROLE_CO_CEO above.
-SUPPORT_CATEGORY: int = 1548346082767929519
+# (Each support kind now has its own category above in TICKET_CATEGORIES —
+# CATEGORY_OWNER / CATEGORY_GENERAL / CATEGORY_TECHNICAL / CATEGORY_BILLING.)
 SUPPORT_STAFF_ROLES: list[int] = []
 SUPPORT_PANEL_CHANNEL: int = 1545576092323287101
 SUPPORT_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
