@@ -10,26 +10,26 @@ def _env_or(env_name: str, value: str) -> str:
     return os.environ.get(env_name, value)
 
 
-GUILD_ID: int = 0
+GUILD_ID: int = 1544741507049721926
 
-ROLE_DEVELOPER: int = 0
-ROLE_CEO: int = 0
-ROLE_CO_CEO: int = 0
-ROLE_OWNERSHIP: int = 0
+ROLE_DEVELOPER: int = 1545533359558492261
+ROLE_CEO: int = 1545533341032382504
+ROLE_CO_CEO: int = 1545533343888580699
+ROLE_OWNERSHIP: int = 1548308555701026906
 
 # Convenience aliases used across cogs (bot_status, giveaways, permissions).
 CEO_ROLE_ID: int = ROLE_CEO
 OWNERSHIP_ROLE_ID: int = ROLE_OWNERSHIP
 
-CHANNEL_TICKET_PANEL: int = 0
-CHANNEL_LOG: int = 0
-CHANNEL_ORDERS: int = 0
-CHANNEL_ORDERS_LOG: int = 0
-LOG_GIVEAWAY_CHANNEL_ID: int = 0
-REVIEWS_LOG_CHANNEL_ID: int = 0
-SUGGESTIONS_CHANNEL_ID: int = 0
+CHANNEL_TICKET_PANEL: int = 1545576092323287101
+CHANNEL_LOG: int = 1545572161014726756
+CHANNEL_ORDERS: int = 
+CHANNEL_ORDERS_LOG: int = 
+LOG_GIVEAWAY_CHANNEL_ID: int = 
+REVIEWS_LOG_CHANNEL_ID: int = 
+SUGGESTIONS_CHANNEL_ID: int = 
 
-TICKET_CATEGORY: int = 0
+TICKET_CATEGORY: int = 
 
 # URLs used for the ticket panel (banner + thumbnail). Leave as None to skip.
 # The per-ticket panel inside each ticket channel only ever shows a
@@ -40,9 +40,9 @@ PANEL_THUMBNAIL_URL: str | None = None
 # --- Support ticket system (Owner / General Support / Technical / Billing) ---
 # staff_roles is its own list of role IDs — fill it in yourself, it can
 # overlap with or differ from ROLE_DEVELOPER/ROLE_CEO/ROLE_CO_CEO above.
-SUPPORT_CATEGORY: int = 0
+SUPPORT_CATEGORY: int = 
 SUPPORT_STAFF_ROLES: list[int] = []
-SUPPORT_PANEL_CHANNEL: int = 0
+SUPPORT_PANEL_CHANNEL: int = 
 SUPPORT_BANNER_URL: str | None = None
 SUPPORT_THUMBNAIL_URL: str | None = None
 
