@@ -37,7 +37,7 @@ DEFAULT_ROTATE_SECONDS = 20
 def _default_data() -> dict:
     return {
         "type": "watching",
-        "text": "τον server",
+        "text": "globalbots",
         "presence": "online",
         "rotate": False,
         "interval": DEFAULT_ROTATE_SECONDS,
@@ -75,7 +75,7 @@ class BotStatus(commands.Cog):
         discord_status = STATUS_TYPES.get(status_key, discord.Status.online)
 
         if entry is None:
-            entry = {"type": data.get("type", "watching"), "text": data.get("text", "τον server")}
+            entry = {"type": data.get("type", "watching"), "text": data.get("text", "globalbots")}
 
         activity = self._build_activity(entry)
 
