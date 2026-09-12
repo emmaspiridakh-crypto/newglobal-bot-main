@@ -87,7 +87,7 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(discord.ui.TextDisplay(f"- {EMOJI['support_owner']} __**Contact Owner**__"))
         children.append(
             discord.ui.Section(
-                discord.ui.TextDisplay("> -# Direct contact with GlobalBots Administration."),
+                discord.ui.TextDisplay("> Direct contact with GlobalBots Administration."),
                 accessory=owner_btn,
             )
         )
@@ -101,7 +101,7 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(discord.ui.TextDisplay(f"- {EMOJI['support_general']} __**General Support**__"))
         children.append(
             discord.ui.Section(
-                discord.ui.TextDisplay("> -# General assistance, questions and support."),
+                discord.ui.TextDisplay("> General assistance, questions and support."),
                 accessory=support_btn,
             )
         )
@@ -115,7 +115,7 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(discord.ui.TextDisplay(f"- {EMOJI['support_technical']} __**Technical Issues**__"))
         children.append(
             discord.ui.Section(
-                discord.ui.TextDisplay("> -# Problems with our bot, bugs, systems not working."),
+                discord.ui.TextDisplay("> Problems with our bot, bugs, systems not working."),
                 accessory=technical_btn,
             )
         )
@@ -130,7 +130,7 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay(
-                    "> -# If you have a problem with your payment or something didn't go through."
+                    "> If you have a problem with your payment or something didn't go through."
                 ),
                 accessory=billing_btn,
             )
