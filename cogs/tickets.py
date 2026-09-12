@@ -11,6 +11,7 @@ import config
 from emojis import EMOJI
 from utils.storage import store, TRANSCRIPTS_DIR
 from utils.transcripts import build_transcript
+from cogs._raw_purchase_panel_reference import PurchasePanelView
 
 # Ticket "kinds" that belong to the support-panel system (Owner / General
 # Support / Technical / Billing) use their own staff roles + category,
@@ -613,12 +614,12 @@ class Tickets(commands.Cog):
     @app_commands.command(name="send-panel", description="Post the ticket panel in this channel")
     @app_commands.checks.has_permissions(administrator=True)
     async def send_panel(self, interaction: discord.Interaction) -> None:
-        await interaction.channel.send(view=TicketPanelView())
+        await interaction.channel.send(view=PurchasePanelView())
         await interaction.response.send_message("Panel sent.", ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:
     for item_cls in (ClaimButton, PingButton, CloseButton, TranscriptButton):
         bot.add_dynamic_items(item_cls)
-    bot.add_view(TicketPanelView())
+    bot.add_view(PurchasePanelView())
     await bot.add_cog(Tickets(bot))
