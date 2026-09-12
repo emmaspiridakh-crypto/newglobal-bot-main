@@ -60,7 +60,7 @@ PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 # overlap with or differ from ROLE_DEVELOPER/ROLE_CEO/ROLE_CO_CEO above.
 # (Each support kind now has its own category above in TICKET_CATEGORIES —
 # CATEGORY_OWNER / CATEGORY_GENERAL / CATEGORY_TECHNICAL / CATEGORY_BILLING.)
-SUPPORT_STAFF_ROLES: list[int] = []
+SUPPORT_STAFF_ROLES: list[int] = [1548308555701026906, 1545533359558492261, 1545533352377974996]
 SUPPORT_PANEL_CHANNEL: int = 1545576092323287101
 SUPPORT_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
 SUPPORT_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
