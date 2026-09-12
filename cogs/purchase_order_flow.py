@@ -78,11 +78,11 @@ class PurchaseSelectionView(discord.ui.LayoutView):
 
         ready = bool(self.bot_type and self.plan and self.payment)
         check_btn = discord.ui.Button(
-            label="Check", style=discord.ButtonStyle.success, emoji="✅", disabled=not ready
+            label="Check", style=discord.ButtonStyle.success, emoji=EMOJI["check"], disabled=not ready
         )
         check_btn.callback = self.on_check
 
-        cancel_btn = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.danger, emoji="🚫")
+        cancel_btn = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.danger, emoji=EMOJI["cancel"])
         cancel_btn.callback = self.on_cancel
 
         summary = (
@@ -92,7 +92,7 @@ class PurchaseSelectionView(discord.ui.LayoutView):
         )
 
         container = discord.ui.Container(
-            discord.ui.TextDisplay("🛒 **Purchase a Bot**"),
+            discord.ui.TextDisplay(f"{EMOJI['purchase']} **Purchase a Bot**"),
             discord.ui.TextDisplay(summary),
             discord.ui.Separator(),
             discord.ui.ActionRow(what_bot_btn),
@@ -131,7 +131,7 @@ class PurchaseSelectionView(discord.ui.LayoutView):
     async def on_cancel(self, interaction: discord.Interaction) -> None:
         cancelled_view = discord.ui.LayoutView(timeout=None)
         cancelled_view.add_item(
-            discord.ui.Container(discord.ui.TextDisplay("🚫 Cancelled."), accent_colour=discord.Colour.red())
+            discord.ui.Container(discord.ui.TextDisplay(f"{EMOJI['cancel']} Cancelled."), accent_colour=discord.Colour.red())
         )
         await interaction.response.edit_message(view=cancelled_view)
 
@@ -193,11 +193,11 @@ class OrderPaymentView(discord.ui.LayoutView):
 
         ready = bool(self.payment)
         send_btn = discord.ui.Button(
-            label="Send", style=discord.ButtonStyle.success, emoji="📨", disabled=not ready
+            label="Send", style=discord.ButtonStyle.success, emoji=EMOJI["send"], disabled=not ready
         )
         send_btn.callback = self.on_send
 
-        cancel_btn = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.danger, emoji="🚫")
+        cancel_btn = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.danger, emoji=EMOJI["cancel"])
         cancel_btn.callback = self.on_cancel
 
         summary = (
@@ -207,7 +207,7 @@ class OrderPaymentView(discord.ui.LayoutView):
         )
 
         container = discord.ui.Container(
-            discord.ui.TextDisplay("🎧 **Order a Custom Bot**"),
+            discord.ui.TextDisplay(f"{EMOJI['order']} **Order a Custom Bot**"),
             discord.ui.TextDisplay(summary),
             discord.ui.TextDisplay(f"**Description:**\n{self.description}"),
             discord.ui.Separator(),
@@ -239,7 +239,7 @@ class OrderPaymentView(discord.ui.LayoutView):
     async def on_cancel(self, interaction: discord.Interaction) -> None:
         cancelled_view = discord.ui.LayoutView(timeout=None)
         cancelled_view.add_item(
-            discord.ui.Container(discord.ui.TextDisplay("🚫 Cancelled."), accent_colour=discord.Colour.red())
+            discord.ui.Container(discord.ui.TextDisplay(f"{EMOJI['cancel']} Cancelled."), accent_colour=discord.Colour.red())
         )
         await interaction.response.edit_message(view=cancelled_view)
 
