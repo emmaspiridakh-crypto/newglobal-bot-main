@@ -70,16 +70,31 @@ async def get_log_channel(guild: discord.Guild, kind: str | None = None) -> disc
 def ticket_overwrites(
     guild: discord.Guild, customer: discord.Member, kind: str | None = None
 ) -> dict[discord.abc.Snowflake, discord.PermissionOverwrite]:
+    staff_ids = set(staff_role_ids_for_kind(kind))
+
+    # Explicit deny for every role in the server (not just @everyone). If we
+    # only deny @everyone, any role that has an explicit "View Channel" allow
+    # on the ticket category (e.g. a general "Member" role) leaks straight
+    # through, since a channel with no overwrite entry for a role inherits
+    # that role's permission from the category. Denying every non-staff role
+    # by name here means nothing can leak in from the category, no matter
+    # how that category happens to be configured.
     overwrites: dict[discord.abc.Snowflake, discord.PermissionOverwrite] = {
         guild.default_role: discord.PermissionOverwrite(view_channel=False),
-        customer: discord.PermissionOverwrite(
-            view_channel=True, send_messages=True, read_message_history=True
-        ),
-        guild.me: discord.PermissionOverwrite(
-            view_channel=True, send_messages=True, manage_channels=True
-        ),
     }
-    for role_id in staff_role_ids_for_kind(kind):
+    for role in guild.roles:
+        if role.id == guild.id or role.id in staff_ids or role.managed:
+            continue
+        overwrites[role] = discord.PermissionOverwrite(view_channel=False)
+
+    overwrites[customer] = discord.PermissionOverwrite(
+        view_channel=True, send_messages=True, read_message_history=True
+    )
+    overwrites[guild.me] = discord.PermissionOverwrite(
+        view_channel=True, send_messages=True, manage_channels=True
+    )
+
+    for role_id in staff_ids:
         role = guild.get_role(role_id)
         if role is not None:
             overwrites[role] = discord.PermissionOverwrite(
