@@ -16,6 +16,8 @@ ROLE_DEVELOPER: int = 1545533359558492261
 ROLE_CEO: int = 1545533341032382504
 ROLE_CO_CEO: int = 1545533343888580699
 ROLE_OWNERSHIP: int = 1548308555701026906
+ROLE_STAFF: int = 1545533352377974996
+ROLE_MANAGER: int = 1548418196078596158
 
 # Convenience aliases used across cogs (bot_status, giveaways, permissions).
 CEO_ROLE_ID: int = ROLE_CEO
@@ -60,7 +62,15 @@ PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 # overlap with or differ from ROLE_DEVELOPER/ROLE_CEO/ROLE_CO_CEO above.
 # (Each support kind now has its own category above in TICKET_CATEGORIES —
 # CATEGORY_OWNER / CATEGORY_GENERAL / CATEGORY_TECHNICAL / CATEGORY_BILLING.)
-SUPPORT_STAFF_ROLES: list[int] = [1548308555701026906, 1545533347877625886, 1545533352377974996, 1548418196078596158]
+TICKET_KIND_STAFF_ROLES: dict[str, list[int]] = {
+    "owner": [ROLE_OWNERSHIP],
+    "order": [ROLE_OWNERSHIP, ROLE_DEVELOPER],
+    "purchase": [ROLE_OWNERSHIP],
+    "general": [ROLE_STAFF, ROLE_MANAGER],
+    "technical": [ROLE_DEVELOPER, ROLE_OWNERSHIP],
+    "billing": [ROLE_OWNERSHIP],
+}
+
 SUPPORT_PANEL_CHANNEL: int = 1545576092323287101
 SUPPORT_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
 SUPPORT_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
