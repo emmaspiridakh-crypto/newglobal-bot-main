@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 
 import discord
 from discord.ext import commands
@@ -31,7 +32,25 @@ async def main():
     keep_alive()
     await store.init()
 
+    loop = asyncio.get_running_loop()
+
     async with bot:
+        # Render (and most hosts) send SIGTERM to stop the old process
+        # during a deploy. Without a handler, Python kills the process
+        # immediately without closing the gateway connection — the old
+        # instance can linger and keep receiving interactions alongside
+        # the new one, causing "already acknowledged" errors on every
+        # button click. This makes shutdown graceful instead.
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            try:
+                loop.add_signal_handler(
+                    sig, lambda: asyncio.create_task(bot.close())
+                )
+            except NotImplementedError:
+                # add_signal_handler isn't available on some platforms
+                # (e.g. Windows) — safe to skip there.
+                pass
+
         await bot.load_extension("cogs.tickets")
         await bot.load_extension("cogs.orders")
         await bot.load_extension("cogs.support_tickets")
