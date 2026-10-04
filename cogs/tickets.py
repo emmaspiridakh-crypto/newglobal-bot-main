@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import logging
 import datetime as dt
 
 import discord
@@ -12,6 +13,8 @@ from emojis import EMOJI
 from utils.storage import store, TRANSCRIPTS_DIR
 from utils.transcripts import build_transcript
 from cogs._raw_purchase_panel_reference import PurchasePanelView
+
+log = logging.getLogger(__name__)
 
 # Ticket "kinds" that belong to the support-panel system (Owner / General
 # Support / Technical / Billing) use their own staff roles + category,
@@ -26,6 +29,8 @@ TICKET_TITLES = {
     "technical": f"{EMOJI['support_technical']} Technical Issue Ticket",
     "billing": f"{EMOJI['support_billing']} Billing Issue Ticket",
 }
+
+MAX_CHANNEL_OVERWRITES = 100
 
 TICKET_ACCENT_COLOURS = {
     "purchase": discord.Colour.green(),
@@ -43,7 +48,7 @@ TICKET_ACCENT_COLOURS = {
 
 def staff_role_ids_for_kind(kind: str | None) -> list[int]:
     if kind in SUPPORT_KINDS:
-        return config.SUPPORT_STAFF_ROLES
+        return list(config.TICKET_KIND_STAFF_ROLES.get(kind, []))
     return config.staff_role_ids()
 
 
@@ -72,18 +77,23 @@ def ticket_overwrites(
 ) -> dict[discord.abc.Snowflake, discord.PermissionOverwrite]:
     staff_ids = set(staff_role_ids_for_kind(kind))
 
-    # Explicit deny for every role in the server (not just @everyone). If we
-    # only deny @everyone, any role that has an explicit "View Channel" allow
-    # on the ticket category (e.g. a general "Member" role) leaks straight
-    # through, since a channel with no overwrite entry for a role inherits
-    # that role's permission from the category. Denying every non-staff role
-    # by name here means nothing can leak in from the category, no matter
-    # how that category happens to be configured.
+    # Discord allows at most 100 permission overwrites per channel. Denying
+    # *every* role in a big server blows past that limit and channel creation
+    # fails with a 400 error. @everyone is always denied; on top of that we
+    # only deny the roles that can actually see channels by default
+    # (View Channel in their base permissions), and stop before the limit.
     overwrites: dict[discord.abc.Snowflake, discord.PermissionOverwrite] = {
         guild.default_role: discord.PermissionOverwrite(view_channel=False),
     }
+
+    reserved = 2 + len(staff_ids)  # customer + bot + staff roles
+    max_role_denies = MAX_CHANNEL_OVERWRITES - reserved - 1
     for role in guild.roles:
-        if role.id == guild.id or role.id in staff_ids or role.managed:
+        if len(overwrites) - 1 >= max_role_denies:
+            break
+        if role.id == guild.id or role.id in staff_ids:
+            continue
+        if not role.permissions.view_channel:
             continue
         overwrites[role] = discord.PermissionOverwrite(view_channel=False)
 
@@ -101,6 +111,37 @@ def ticket_overwrites(
                 view_channel=True, send_messages=True, read_message_history=True
             )
     return overwrites
+
+
+def audit_ticket_visibility(
+    channel: discord.TextChannel,
+    customer: discord.Member,
+    kind: str | None,
+) -> list[str]:
+    """Returns who can see the freshly created ticket channel even though
+    they should not (not the customer, not the bot, not a configured staff
+    role). Used only for logging — it tells you exactly who is leaking and
+    why instead of guessing."""
+    guild = channel.guild
+    staff_ids = set(staff_role_ids_for_kind(kind))
+    leaks: list[str] = []
+    for member in guild.members:
+        if member.id in (customer.id, guild.me.id):
+            continue
+        if any(role.id in staff_ids for role in member.roles):
+            continue
+        perms = channel.permissions_for(member)
+        if not perms.view_channel:
+            continue
+        if member.id == guild.owner_id:
+            why = "server owner"
+        elif perms.administrator:
+            admin_roles = [r.name for r in member.roles if r.permissions.administrator]
+            why = "Administrator via role: " + ", ".join(admin_roles or ["?"])
+        else:
+            why = "roles: " + ", ".join(r.name for r in member.roles if r.id != guild.id)
+        leaks.append(f"{member} ({member.id}) — {why}")
+    return leaks
 
 
 # --------------------------------------------------------------------------
@@ -261,6 +302,14 @@ class TranscriptButton(
         return cls(int(match["channel_id"]))
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        all_staff_ids = {r for ids in config.TICKET_KIND_STAFF_ROLES.values() for r in ids}
+        all_staff_ids.update(config.staff_role_ids())
+        if not isinstance(interaction.user, discord.Member) or not any(
+            role.id in all_staff_ids for role in interaction.user.roles
+        ):
+            return await interaction.response.send_message(
+                "Only staff can view transcripts.", ephemeral=True
+            )
         path = TRANSCRIPTS_DIR / f"{self.channel_id}.txt"
         if not path.exists():
             return await interaction.response.send_message(
@@ -469,35 +518,70 @@ async def create_ticket_channel(
         "Creating your ticket...", ephemeral=True
     )
 
-    category_id = config.TICKET_CATEGORIES.get(kind, config.TICKET_CATEGORY)
-    category = guild.get_channel(category_id)
-    channel_name = f"{safe_name(customer.display_name)}-{kind}"
+    channel: discord.TextChannel | None = None
+    try:
+        category_id = config.TICKET_CATEGORIES.get(kind, config.TICKET_CATEGORY)
+        category = guild.get_channel(category_id)
+        channel_name = f"{safe_name(customer.display_name)}-{kind}"
 
-    channel = await guild.create_text_channel(
-        name=channel_name,
-        category=category if isinstance(category, discord.CategoryChannel) else None,
-        overwrites=ticket_overwrites(guild, customer, kind),
-        reason=f"Ticket opened by {customer} ({customer.id})",
-    )
+        channel = await guild.create_text_channel(
+            name=channel_name,
+            category=category if isinstance(category, discord.CategoryChannel) else None,
+            overwrites=ticket_overwrites(guild, customer, kind),
+            reason=f"Ticket opened by {customer} ({customer.id})",
+        )
 
-    view = build_ticket_control_view(channel.id, kind, customer, fields, claimed_by=None)
-    panel_message = await channel.send(view=view)
+        view = build_ticket_control_view(channel.id, kind, customer, fields, claimed_by=None)
+        panel_message = await channel.send(view=view)
 
-    await store.create(
-        channel.id,
-        customer_id=customer.id,
-        kind=kind,
-        fields=fields,
-        claimed_by=None,
-        panel_message_id=panel_message.id,
-        opened_at=dt.datetime.utcnow().isoformat(),
-    )
+        await store.create(
+            channel.id,
+            customer_id=customer.id,
+            kind=kind,
+            fields=fields,
+            claimed_by=None,
+            panel_message_id=panel_message.id,
+            opened_at=dt.datetime.utcnow().isoformat(),
+        )
+    except Exception as exc:
+        # Without this, any error here is swallowed and the user is stuck on
+        # "Creating your ticket..." forever. Log the full traceback (visible
+        # in the Render logs) and tell the user something went wrong.
+        log.exception("Failed to create %s ticket for %s (%s)", kind, customer, customer.id)
+        if channel is not None:
+            try:
+                await channel.delete(reason="Ticket creation failed")
+            except discord.HTTPException:
+                pass
+        if isinstance(exc, discord.Forbidden):
+            reason = "I'm missing permissions (Manage Channels / access to the ticket category)."
+        elif isinstance(exc, discord.HTTPException):
+            reason = f"Discord rejected the request ({exc.status}: {exc.text})."
+        else:
+            reason = f"{type(exc).__name__}: {exc}"
+        await interaction.edit_original_response(
+            content=f"Could not create your ticket. {reason}"
+        )
+        return
 
     await interaction.edit_original_response(
         content=f"Your ticket has been created: {channel.mention}"
     )
 
-    await log_ticket_open(guild, channel, customer, kind, fields)
+    try:
+        leaks = audit_ticket_visibility(channel, customer, kind)
+        if leaks:
+            log.warning(
+                "Ticket #%s is visible to %d member(s) who are not staff/customer:\n  %s",
+                channel.name, len(leaks), "\n  ".join(leaks[:15]),
+            )
+    except Exception:
+        log.exception("Visibility audit failed for channel %s", channel.id)
+
+    try:
+        await log_ticket_open(guild, channel, customer, kind, fields)
+    except Exception:
+        log.exception("Failed to log ticket open for channel %s", channel.id)
 
 
 async def close_ticket(interaction: discord.Interaction, channel_id: int, reason: str) -> None:
