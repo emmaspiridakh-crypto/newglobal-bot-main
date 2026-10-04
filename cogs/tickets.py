@@ -720,8 +720,11 @@ class Tickets(commands.Cog):
         name="ticket-audit",
         description="Check who can see tickets / log channels and why (admin only)",
     )
+    @app_commands.describe(member="A member who can see this ticket but shouldn't - explains why")
     @app_commands.checks.has_permissions(administrator=True)
-    async def ticket_audit(self, interaction: discord.Interaction) -> None:
+    async def ticket_audit(
+        self, interaction: discord.Interaction, member: discord.Member | None = None
+    ) -> None:
         guild = interaction.guild
         if guild is None:
             return await interaction.response.send_message("Server only.", ephemeral=True)
@@ -765,7 +768,42 @@ class Tickets(commands.Cog):
         else:
             lines.append("\n-# Run this inside an open ticket channel to also see who can view that ticket.")
 
-        await interaction.followup.send("\n".join(lines)[:1900], ephemeral=True)
+        if ticket is not None and isinstance(interaction.channel, discord.TextChannel):
+            staff_ids = set(staff_role_ids_for_kind(ticket["kind"]))
+            holders = [m for m in guild.members if any(r.id in staff_ids for r in m.roles)]
+            staff_names = [r.name for r in guild.roles if r.id in staff_ids]
+            lines.append(
+                f"\n**Staff roles for this ticket:** {', '.join(staff_names) or 'none found'} "
+                f"-> {len(holders)} member(s) hold them (they always see it)"
+            )
+
+        if member is not None and isinstance(interaction.channel, discord.TextChannel):
+            # Fetch the channel fresh from Discord so we compare with what
+            # Discord really has, not with the bot's cache.
+            fresh = await guild.fetch_channel(interaction.channel.id)
+            lines.append(f"\n**Why {member} can see this channel**")
+            lines.append(f"- Real permission calc: view_channel = {fresh.permissions_for(member).view_channel}")
+            base = member.guild_permissions
+            lines.append(
+                f"- Server-wide: administrator={base.administrator}, "
+                f"manage_channels={base.manage_channels}, manage_roles={base.manage_roles}"
+            )
+
+            def state(ow: discord.PermissionOverwrite) -> str:
+                return {True: "ALLOW", False: "DENY", None: "neutral"}[ow.view_channel]
+
+            lines.append(f"- @everyone overwrite on this channel: {state(fresh.overwrites_for(guild.default_role))}")
+            for role in member.roles:
+                if role.id == guild.id:
+                    continue
+                tag = " (staff role)" if ticket and role.id in set(staff_role_ids_for_kind(ticket["kind"])) else ""
+                lines.append(
+                    f"- role {role.name}{tag}: view overwrite={state(fresh.overwrites_for(role))}, "
+                    f"role administrator={role.permissions.administrator}"
+                )
+            lines.append(f"- member overwrite: {state(fresh.overwrites_for(member))}")
+
+        await interaction.followup.send("\n".join(lines)[:1990], ephemeral=True)
 
     @app_commands.command(name="send-panel", description="Post the ticket panel in this channel")
     @app_commands.checks.has_permissions(administrator=True)
