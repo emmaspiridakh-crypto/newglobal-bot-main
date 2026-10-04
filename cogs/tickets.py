@@ -531,6 +531,12 @@ async def create_ticket_channel(
             reason=f"Ticket opened by {customer} ({customer.id})",
         )
 
+        # Safety net: make sure @everyone really cannot see the channel.
+        if channel.overwrites_for(guild.default_role).view_channel is not False:
+            await channel.set_permissions(
+                guild.default_role, view_channel=False, reason="Ticket must be private"
+            )
+
         view = build_ticket_control_view(channel.id, kind, customer, fields, claimed_by=None)
         panel_message = await channel.send(view=view)
 
@@ -709,6 +715,57 @@ async def log_ticket_close(
 class Tickets(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+
+    @app_commands.command(
+        name="ticket-audit",
+        description="Check who can see tickets / log channels and why (admin only)",
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def ticket_audit(self, interaction: discord.Interaction) -> None:
+        guild = interaction.guild
+        if guild is None:
+            return await interaction.response.send_message("Server only.", ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
+
+        lines: list[str] = []
+
+        def everyone_can_see(ch: discord.abc.GuildChannel | None) -> str:
+            if ch is None:
+                return "NOT FOUND (wrong ID or bot cannot see it)"
+            seen = ch.permissions_for(guild.default_role).view_channel
+            return "VISIBLE TO @everyone" if seen else "private"
+
+        lines.append("**Channels used by the ticket system**")
+        checks = {
+            "Purchase/Order log (CHANNEL_LOG)": config.CHANNEL_LOG,
+            "Support log (SUPPORT_LOG_CHANNEL)": config.SUPPORT_LOG_CHANNEL,
+            "Orders channel (CHANNEL_ORDERS)": config.CHANNEL_ORDERS,
+            "Orders log (CHANNEL_ORDERS_LOG)": config.CHANNEL_ORDERS_LOG,
+        }
+        for label, cid in checks.items():
+            ch = guild.get_channel(cid)
+            lines.append(f"- {label}: {ch.mention if ch else cid} -> {everyone_can_see(ch)}")
+
+        lines.append("\n**Ticket categories**")
+        for kind, cid in config.TICKET_CATEGORIES.items():
+            ch = guild.get_channel(cid)
+            lines.append(f"- {kind}: {ch.name if ch else cid} -> {everyone_can_see(ch)} (tickets get their own overwrites, so this is informational)")
+
+        ticket = await store.get(interaction.channel.id)
+        if ticket is not None and isinstance(interaction.channel, discord.TextChannel):
+            customer = guild.get_member(ticket["customer_id"])
+            if customer is not None:
+                leaks = audit_ticket_visibility(interaction.channel, customer, ticket["kind"])
+                lines.append(f"\n**This ticket ({ticket['kind']})** - non-staff who can see it: {len(leaks)}")
+                lines.extend(f"- {leak}" for leak in leaks[:15])
+                if not leaks:
+                    lines.append("- nobody besides the customer, the bot and staff")
+                if guild.chunked is False:
+                    lines.append("-# Member cache is incomplete, result may miss people.")
+        else:
+            lines.append("\n-# Run this inside an open ticket channel to also see who can view that ticket.")
+
+        await interaction.followup.send("\n".join(lines)[:1900], ephemeral=True)
 
     @app_commands.command(name="send-panel", description="Post the ticket panel in this channel")
     @app_commands.checks.has_permissions(administrator=True)
