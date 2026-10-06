@@ -152,7 +152,7 @@ class OrderInfoModal(discord.ui.Modal, title="Order a Custom Bot"):
     )
     budget = discord.ui.TextInput(
         label="What's your budget?",
-        placeholder="e.g. €20,
+        placeholder="e.g. 20€",
         max_length=100,
     )
 
