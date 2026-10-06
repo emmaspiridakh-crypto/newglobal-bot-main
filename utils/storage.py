@@ -103,6 +103,15 @@ class TicketStore:
             f"UPDATE tickets SET {columns} WHERE channel_id = ?", values
         )
 
+    async def claim(self, channel_id: int, user_id: int) -> bool:
+        """Atomically claims the ticket. Returns False if somebody else
+        claimed it first (two staff pressing Claim at the same time)."""
+        result = await self._client.execute(
+            "UPDATE tickets SET claimed_by = ? WHERE channel_id = ? AND claimed_by IS NULL",
+            [user_id, channel_id],
+        )
+        return bool(result.rows_affected)
+
     async def delete(self, channel_id: int) -> None:
         await self._client.execute(
             "DELETE FROM tickets WHERE channel_id = ?", [channel_id]
@@ -180,6 +189,17 @@ class OrderStore:
             "created_by": row[7],
             "created_at": row[8],
         }
+
+    async def get_active_for_ticket(self, ticket_channel_id: int) -> dict[str, Any] | None:
+        """The newest pending/accepted order of a ticket, if any."""
+        result = await self._client.execute(
+            "SELECT order_id FROM orders WHERE ticket_channel_id = ? "
+            "AND status IN ('pending', 'accepted') ORDER BY order_id DESC LIMIT 1",
+            [ticket_channel_id],
+        )
+        if not result.rows:
+            return None
+        return await self.get(result.rows[0][0])
 
     async def update(self, order_id: int, **fields: Any) -> None:
         if not fields:
