@@ -36,7 +36,7 @@ GENERAL = {
     "server": "<:name:1545576824380067860>",
     # Modify button on the ticket panel. Uses the same emoji as the giveaway
     # "edit" button for now — replace the ID with your own custom emoji.
-    "modify": "<:name:1556989862035460207>",
+    "modify": "<:name:1545577232922312734>",
 }
 
 SUGGESTIONS = {
