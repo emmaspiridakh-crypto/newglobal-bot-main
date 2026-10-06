@@ -66,7 +66,7 @@ class PurchasePanelView(ui.LayoutView):
                 accessory=ui.Button(
                     style=discord.ButtonStyle.link,
                     label="Showcase",
-                    url="https://discord.com/channels/1544741507049721926/1545567846887850076",
+                    url="https://discord.com/channels/1544741507049721926/1548765588225003560",
                 ),
             ),
             ui.TextDisplay(
