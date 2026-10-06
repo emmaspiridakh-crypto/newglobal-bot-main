@@ -409,6 +409,41 @@ async def send_order_dm(
         pass  # DMs closed or Discord refused — the order itself already went through
 
 
+TICKET_STATUS_STYLE = {
+    "accepted": (f"{EMOJI['order_pending']} **Your order has been accepted and is pending.**", discord.Colour.blue()),
+    "completed": (f"{EMOJI['order_done']} **Your order has been completed.**", discord.Colour.green()),
+    "cancelled": (f"{EMOJI['order_cancel']} **Your order has been cancelled.**", discord.Colour.red()),
+}
+
+
+async def update_ticket_status_message(guild: discord.Guild, order: dict) -> None:
+    """Keeps ONE order-status message inside the ticket: it is posted on
+    accept and then edited on done / cancelled (instead of posting a new
+    message each time). Its id is stored in orders.ticket_panel_message_id."""
+    ticket_channel = guild.get_channel(order["ticket_channel_id"])
+    style = TICKET_STATUS_STYLE.get(order["status"])
+    if not isinstance(ticket_channel, discord.TextChannel) or style is None:
+        return
+    text, colour = style
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(discord.ui.Container(discord.ui.TextDisplay(text), accent_colour=colour))
+
+    try:
+        message_id = order.get("ticket_panel_message_id")
+        if message_id:
+            try:
+                message = await ticket_channel.fetch_message(message_id)
+                await message.edit(view=view)
+                return
+            except discord.NotFound:
+                pass  # the message was deleted — post a fresh one below
+        message = await ticket_channel.send(view=view)
+        await order_store.update(order["order_id"], ticket_panel_message_id=message.id)
+        order["ticket_panel_message_id"] = message.id
+    except discord.HTTPException:
+        log.exception("Could not update the order status message in ticket %s", ticket_channel.id)
+
+
 async def _guard_staff(interaction: discord.Interaction, text: str) -> bool:
     """True if the user is staff and the click happened inside the server."""
     if (
@@ -443,21 +478,7 @@ async def handle_accept(interaction: discord.Interaction, order_id: int) -> None
     except discord.HTTPException:
         log.exception("Could not log acceptance of order %s", order_id)
 
-    ticket_channel = guild.get_channel(order["ticket_channel_id"])
-    if isinstance(ticket_channel, discord.TextChannel):
-        notice = discord.ui.LayoutView(timeout=None)
-        notice.add_item(
-            discord.ui.Container(
-                discord.ui.TextDisplay(
-                    f"{EMOJI['order_pending']} **Your order has been accepted and is pending.**"
-                ),
-                accent_colour=discord.Colour.blue(),
-            )
-        )
-        try:
-            await ticket_channel.send(view=notice)
-        except discord.HTTPException:
-            log.exception("Could not post the acceptance notice in ticket %s", ticket_channel.id)
+    await update_ticket_status_message(guild, order)
 
     await send_order_dm(
         guild, order,
@@ -487,6 +508,8 @@ async def handle_done(interaction: discord.Interaction, order_id: int) -> None:
     except discord.HTTPException:
         log.exception("Could not log completion of order %s", order_id)
 
+    await update_ticket_status_message(guild, order)
+
     await send_order_dm(
         guild, order,
         f"{EMOJI['order_done']} **Your order has been completed.**",
@@ -514,6 +537,8 @@ async def handle_cancel(interaction: discord.Interaction, order_id: int) -> None
         await log_order_event(guild, order, "cancelled", interaction.user)
     except discord.HTTPException:
         log.exception("Could not log cancellation of order %s", order_id)
+
+    await update_ticket_status_message(guild, order)
 
     await send_order_dm(
         guild, order,
