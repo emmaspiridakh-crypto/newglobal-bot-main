@@ -61,13 +61,6 @@ class PurchasePanelView(ui.LayoutView):
                 accessory=order_btn,
             ),
             ui.Separator(visible=True, spacing=discord.SeparatorSpacing.large),
-            ui.Section(
-                ui.TextDisplay("###  <:name:1545576237022445658> __ **Check Our Bot Showcase!**__"),
-                accessory=ui.Button(
-                    style=discord.ButtonStyle.link,
-                    label="Showcase",
-                    url="https://discord.com/channels/1544741507049721926/1548765588225003560",
-                ),
             ),
             ui.TextDisplay(
                 "-# <a:name:1545576625574387762> Opening tickets without a reason may result in a warning.\n"
