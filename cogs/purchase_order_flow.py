@@ -140,8 +140,8 @@ class PurchaseSelectionView(discord.ui.LayoutView):
 
 class OrderInfoModal(discord.ui.Modal, title="Order a Custom Bot"):
     server = discord.ui.TextInput(
-        label="Which server is this bot for?",
-        placeholder="Server name and/or invite link",
+        label="Which server is this bot for? Put the Server Link & The name.",
+        placeholder="...",
         max_length=200,
     )
     description = discord.ui.TextInput(
@@ -152,7 +152,7 @@ class OrderInfoModal(discord.ui.Modal, title="Order a Custom Bot"):
     )
     budget = discord.ui.TextInput(
         label="What's your budget?",
-        placeholder="e.g. 20€,
+        placeholder="e.g. €20,
         max_length=100,
     )
 
