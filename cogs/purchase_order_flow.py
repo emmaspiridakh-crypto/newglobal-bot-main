@@ -4,9 +4,11 @@ import discord
 
 from emojis import EMOJI
 
+PAYMENT_METHODS = ("PayPal", "Paysafe", "Revolut")
+
 
 # --------------------------------------------------------------------------
-# Purchase flow: What bot? -> Lifetime/Monthly -> PayPal/Paysafe -> Check/Cancel
+# Purchase flow: What bot? -> Lifetime/Monthly -> PayPal/Paysafe/Revolut -> Check/Cancel
 # --------------------------------------------------------------------------
 
 class WhatBotModal(discord.ui.Modal, title="What bot do you want?"):
@@ -62,19 +64,15 @@ class PurchaseSelectionView(discord.ui.LayoutView):
         )
         monthly_btn.callback = self._plan_callback("Monthly")
 
-        paypal_btn = discord.ui.Button(
-            label="PayPal",
-            style=discord.ButtonStyle.success if self.payment == "PayPal" else discord.ButtonStyle.secondary,
-            disabled=(self.payment == "Paysafe"),
-        )
-        paypal_btn.callback = self._payment_callback("PayPal")
-
-        paysafe_btn = discord.ui.Button(
-            label="Paysafe",
-            style=discord.ButtonStyle.success if self.payment == "Paysafe" else discord.ButtonStyle.secondary,
-            disabled=(self.payment == "PayPal"),
-        )
-        paysafe_btn.callback = self._payment_callback("Paysafe")
+        payment_buttons = []
+        for method in PAYMENT_METHODS:
+            btn = discord.ui.Button(
+                label=method,
+                style=discord.ButtonStyle.success if self.payment == method else discord.ButtonStyle.secondary,
+                disabled=(self.payment is not None and self.payment != method),
+            )
+            btn.callback = self._payment_callback(method)
+            payment_buttons.append(btn)
 
         ready = bool(self.bot_type and self.plan and self.payment)
         check_btn = discord.ui.Button(
@@ -97,7 +95,7 @@ class PurchaseSelectionView(discord.ui.LayoutView):
             discord.ui.Separator(),
             discord.ui.ActionRow(what_bot_btn),
             discord.ui.ActionRow(lifetime_btn, monthly_btn),
-            discord.ui.ActionRow(paypal_btn, paysafe_btn),
+            discord.ui.ActionRow(*payment_buttons),
             discord.ui.ActionRow(check_btn, cancel_btn),
             accent_colour=discord.Colour.green(),
         )
@@ -137,7 +135,7 @@ class PurchaseSelectionView(discord.ui.LayoutView):
 
 
 # --------------------------------------------------------------------------
-# Order flow: modal (server/description/budget) -> PayPal/Paysafe -> Send/Cancel
+# Order flow: modal (server/description/budget) -> PayPal/Paysafe/Revolut -> Send/Cancel
 # --------------------------------------------------------------------------
 
 class OrderInfoModal(discord.ui.Modal, title="Order a Custom Bot"):
@@ -154,7 +152,7 @@ class OrderInfoModal(discord.ui.Modal, title="Order a Custom Bot"):
     )
     budget = discord.ui.TextInput(
         label="What's your budget?",
-        placeholder="e.g. $100",
+        placeholder="e.g. 20€,
         max_length=100,
     )
 
@@ -177,19 +175,15 @@ class OrderPaymentView(discord.ui.LayoutView):
         self._build()
 
     def _build(self) -> None:
-        paypal_btn = discord.ui.Button(
-            label="PayPal",
-            style=discord.ButtonStyle.success if self.payment == "PayPal" else discord.ButtonStyle.secondary,
-            disabled=(self.payment == "Paysafe"),
-        )
-        paypal_btn.callback = self._payment_callback("PayPal")
-
-        paysafe_btn = discord.ui.Button(
-            label="Paysafe",
-            style=discord.ButtonStyle.success if self.payment == "Paysafe" else discord.ButtonStyle.secondary,
-            disabled=(self.payment == "PayPal"),
-        )
-        paysafe_btn.callback = self._payment_callback("Paysafe")
+        payment_buttons = []
+        for method in PAYMENT_METHODS:
+            btn = discord.ui.Button(
+                label=method,
+                style=discord.ButtonStyle.success if self.payment == method else discord.ButtonStyle.secondary,
+                disabled=(self.payment is not None and self.payment != method),
+            )
+            btn.callback = self._payment_callback(method)
+            payment_buttons.append(btn)
 
         ready = bool(self.payment)
         send_btn = discord.ui.Button(
@@ -211,7 +205,7 @@ class OrderPaymentView(discord.ui.LayoutView):
             discord.ui.TextDisplay(summary),
             discord.ui.TextDisplay(f"**Description:**\n{self.description}"),
             discord.ui.Separator(),
-            discord.ui.ActionRow(paypal_btn, paysafe_btn),
+            discord.ui.ActionRow(*payment_buttons),
             discord.ui.ActionRow(send_btn, cancel_btn),
             accent_colour=discord.Colour.blue(),
         )
