@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import logging
 import datetime as dt
 
 import discord
@@ -10,6 +11,22 @@ from discord.ext import commands
 import config
 from utils.storage import store, order_store
 from cogs.tickets import is_staff, EMOJI, format_ticket_details as format_order_details
+
+
+log = logging.getLogger(__name__)
+
+# Discord select menus hold at most 25 options.
+MAX_SELECT_OPTIONS = 25
+
+
+def result_view(text: str, colour: discord.Colour = discord.Colour(0x3D91FF)) -> discord.ui.LayoutView:
+    """A Components V2 message can never carry `content=` — and the ephemeral
+    /place-order messages are V2 messages. Editing them with
+    `edit_message(content=..., view=None)` is rejected by Discord, which made
+    the whole interaction fail. Results are shown as a panel instead."""
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(discord.ui.Container(discord.ui.TextDisplay(text), accent_colour=colour))
+    return view
 
 
 # --------------------------------------------------------------------------
@@ -77,6 +94,8 @@ class TicketPickerView(discord.ui.LayoutView):
 
         options = []
         for ticket in tickets:
+            if len(options) >= MAX_SELECT_OPTIONS:
+                break
             channel = guild.get_channel(ticket["channel_id"])
             if channel is None:
                 continue
@@ -110,7 +129,7 @@ class TicketPickerView(discord.ui.LayoutView):
         ticket = await store.get(channel_id)
         if ticket is None:
             return await interaction.response.edit_message(
-                content="That ticket no longer exists.", view=None
+                view=result_view("That ticket no longer exists.", discord.Colour.red())
             )
         await interaction.response.edit_message(
             view=OrderConfirmView(channel_id, ticket, self.guild)
@@ -161,7 +180,9 @@ class OrderConfirmView(discord.ui.LayoutView):
         await send_order_panel(interaction, self.channel_id, self.ticket, self.guild)
 
     async def on_cancel(self, interaction: discord.Interaction) -> None:
-        await interaction.response.edit_message(content="Cancelled.", view=None)
+        await interaction.response.edit_message(
+            view=result_view(f"{EMOJI['order_cancel']} Cancelled.", discord.Colour.red())
+        )
 
 
 # --------------------------------------------------------------------------
@@ -296,10 +317,24 @@ def build_order_panel_view(order: dict, guild: discord.Guild) -> discord.ui.Layo
 async def send_order_panel(
     interaction: discord.Interaction, channel_id: int, ticket: dict, guild: discord.Guild
 ) -> None:
+    # Database + channel sends take longer than Discord's 3 second window,
+    # so acknowledge first and edit the ephemeral message at the end.
+    await interaction.response.defer()
+
     orders_channel = guild.get_channel(config.CHANNEL_ORDERS)
     if not isinstance(orders_channel, discord.TextChannel):
-        return await interaction.response.edit_message(
-            content="Orders channel is not configured correctly.", view=None
+        return await interaction.edit_original_response(
+            view=result_view("Orders channel is not configured correctly.", discord.Colour.red())
+        )
+
+    existing = await order_store.get_active_for_ticket(channel_id)
+    if existing is not None:
+        return await interaction.edit_original_response(
+            view=result_view(
+                f"This ticket already has an active order (#{existing['order_id']}, "
+                f"{existing['status']}). Finish or cancel it first.",
+                discord.Colour.red(),
+            )
         )
 
     order_id = await order_store.create(
@@ -309,18 +344,35 @@ async def send_order_panel(
         fields=ticket.get("fields"),
         status="pending",
         created_by=interaction.user.id,
-        created_at=dt.datetime.utcnow().isoformat(),
+        created_at=dt.datetime.now(dt.timezone.utc).isoformat(),
     )
-
     order = await order_store.get(order_id)
-    view = build_order_panel_view(order, guild)
-    message = await orders_channel.send(view=view)
+
+    try:
+        message = await orders_channel.send(view=build_order_panel_view(order, guild))
+    except discord.HTTPException:
+        # Don't leave an order in the database that nobody can see.
+        log.exception("Could not post order %s in the orders channel", order_id)
+        await order_store.delete(order_id)
+        return await interaction.edit_original_response(
+            view=result_view(
+                "I couldn't post in the orders channel (check my permissions there).",
+                discord.Colour.red(),
+            )
+        )
     await order_store.update(order_id, orders_message_id=message.id)
+    order["orders_message_id"] = message.id
 
-    await log_order_event(guild, order, "placed", interaction.user)
+    try:
+        await log_order_event(guild, order, "placed", interaction.user)
+    except discord.HTTPException:
+        log.exception("Could not log order %s", order_id)
 
-    await interaction.response.edit_message(
-        content=f"Order sent to {orders_channel.mention}.", view=None
+    await interaction.edit_original_response(
+        view=result_view(
+            f"{EMOJI['order_accept']} Order sent to {orders_channel.mention}.",
+            discord.Colour.green(),
+        )
     )
 
 
@@ -330,9 +382,11 @@ async def refresh_order_panel(order: dict, guild: discord.Guild) -> None:
         return
     try:
         message = await orders_channel.fetch_message(order["orders_message_id"])
+        await message.edit(view=build_order_panel_view(order, guild))
     except discord.NotFound:
         return
-    await message.edit(view=build_order_panel_view(order, guild))
+    except discord.HTTPException:
+        log.exception("Could not refresh the panel of order %s", order["order_id"])
 
 
 async def send_order_dm(
@@ -351,25 +405,43 @@ async def send_order_dm(
     )
     try:
         await member.send(view=view)
-    except discord.Forbidden:
-        pass
+    except discord.HTTPException:
+        pass  # DMs closed or Discord refused — the order itself already went through
+
+
+async def _guard_staff(interaction: discord.Interaction, text: str) -> bool:
+    """True if the user is staff and the click happened inside the server."""
+    if (
+        interaction.guild is None
+        or not isinstance(interaction.user, discord.Member)
+        or not is_staff(interaction.user)
+    ):
+        await interaction.response.send_message(text, ephemeral=True)
+        return False
+    return True
 
 
 async def handle_accept(interaction: discord.Interaction, order_id: int) -> None:
-    if not isinstance(interaction.user, discord.Member) or not is_staff(interaction.user):
-        return await interaction.response.send_message("Only staff can accept orders.", ephemeral=True)
+    if not await _guard_staff(interaction, "Only staff can accept orders."):
+        return
+
+    # Several database / channel calls follow — defer so the click never
+    # shows "This interaction failed" when Turso is a bit slow.
+    await interaction.response.defer(ephemeral=True, thinking=True)
 
     order = await order_store.get(order_id)
     if order is None or order["status"] != "pending":
-        return await interaction.response.send_message("This order can't be accepted right now.", ephemeral=True)
+        return await interaction.followup.send("This order can't be accepted right now.", ephemeral=True)
 
     await order_store.update(order_id, status="accepted")
-    order = await order_store.get(order_id)
+    order["status"] = "accepted"
     guild = interaction.guild
 
-    await interaction.response.send_message(f"{EMOJI['order_accept']} Order accepted.", ephemeral=True)
     await refresh_order_panel(order, guild)
-    await log_order_event(guild, order, "accepted", interaction.user)
+    try:
+        await log_order_event(guild, order, "accepted", interaction.user)
+    except discord.HTTPException:
+        log.exception("Could not log acceptance of order %s", order_id)
 
     ticket_channel = guild.get_channel(order["ticket_channel_id"])
     if isinstance(ticket_channel, discord.TextChannel):
@@ -382,61 +454,73 @@ async def handle_accept(interaction: discord.Interaction, order_id: int) -> None
                 accent_colour=discord.Colour.blue(),
             )
         )
-        await ticket_channel.send(view=notice)
+        try:
+            await ticket_channel.send(view=notice)
+        except discord.HTTPException:
+            log.exception("Could not post the acceptance notice in ticket %s", ticket_channel.id)
 
-    member = guild.get_member(order["customer_id"])
-    if member is not None:
-        await send_order_dm(
-            guild, order,
-            f"{EMOJI['order_accept']} **Your order has been accepted and is pending.**",
-            discord.Colour.blue(),
-        )
+    await send_order_dm(
+        guild, order,
+        f"{EMOJI['order_accept']} **Your order has been accepted and is pending.**",
+        discord.Colour.blue(),
+    )
+    await interaction.followup.send(f"{EMOJI['order_accept']} Order accepted.", ephemeral=True)
 
 
 async def handle_done(interaction: discord.Interaction, order_id: int) -> None:
-    if not isinstance(interaction.user, discord.Member) or not is_staff(interaction.user):
-        return await interaction.response.send_message("Only staff can complete orders.", ephemeral=True)
+    if not await _guard_staff(interaction, "Only staff can complete orders."):
+        return
+
+    await interaction.response.defer(ephemeral=True, thinking=True)
 
     order = await order_store.get(order_id)
     if order is None or order["status"] != "accepted":
-        return await interaction.response.send_message("This order can't be marked done right now.", ephemeral=True)
+        return await interaction.followup.send("This order can't be marked done right now.", ephemeral=True)
 
     await order_store.update(order_id, status="completed")
-    order = await order_store.get(order_id)
+    order["status"] = "completed"
     guild = interaction.guild
 
-    await interaction.response.send_message(f"{EMOJI['order_done']} Order marked as completed.", ephemeral=True)
     await refresh_order_panel(order, guild)
-    await log_order_event(guild, order, "completed", interaction.user)
+    try:
+        await log_order_event(guild, order, "completed", interaction.user)
+    except discord.HTTPException:
+        log.exception("Could not log completion of order %s", order_id)
 
-    member = guild.get_member(order["customer_id"])
-    if member is not None:
-        await send_order_dm(
-            guild, order,
-            f"{EMOJI['order_done']} **Your order has been completed.**",
-            discord.Colour.green(),
-        )
+    await send_order_dm(
+        guild, order,
+        f"{EMOJI['order_done']} **Your order has been completed.**",
+        discord.Colour.green(),
+    )
+    await interaction.followup.send(f"{EMOJI['order_done']} Order marked as completed.", ephemeral=True)
 
 
 async def handle_cancel(interaction: discord.Interaction, order_id: int) -> None:
-    if not isinstance(interaction.user, discord.Member) or not is_staff(interaction.user):
-        return await interaction.response.send_message("Only staff can cancel orders.", ephemeral=True)
+    if not await _guard_staff(interaction, "Only staff can cancel orders."):
+        return
+
+    await interaction.response.defer(ephemeral=True, thinking=True)
 
     order = await order_store.get(order_id)
     if order is None or order["status"] in ("completed", "cancelled"):
-        return await interaction.response.send_message("This order can't be cancelled.", ephemeral=True)
+        return await interaction.followup.send("This order can't be cancelled.", ephemeral=True)
 
     await order_store.update(order_id, status="cancelled")
-    order = await order_store.get(order_id)
+    order["status"] = "cancelled"
+    guild = interaction.guild
 
-    await interaction.response.send_message(f"{EMOJI['order_cancel']} Order cancelled.", ephemeral=True)
-    await refresh_order_panel(order, interaction.guild)
-    await log_order_event(interaction.guild, order, "cancelled", interaction.user)
+    await refresh_order_panel(order, guild)
+    try:
+        await log_order_event(guild, order, "cancelled", interaction.user)
+    except discord.HTTPException:
+        log.exception("Could not log cancellation of order %s", order_id)
+
     await send_order_dm(
-        interaction.guild, order,
+        guild, order,
         f"{EMOJI['order_cancel']} **Your order has been cancelled.**",
         discord.Colour.red(),
     )
+    await interaction.followup.send(f"{EMOJI['order_cancel']} Order cancelled.", ephemeral=True)
 
 
 # --------------------------------------------------------------------------
@@ -449,12 +533,16 @@ class Orders(commands.Cog):
 
     @app_commands.command(name="place-order", description="Start an order for an open ticket")
     async def place_order(self, interaction: discord.Interaction) -> None:
-        if not isinstance(interaction.user, discord.Member) or not is_staff(interaction.user):
+        if (
+            interaction.guild is None
+            or not isinstance(interaction.user, discord.Member)
+            or not is_staff(interaction.user)
+        ):
             return await interaction.response.send_message(
                 "Only Developer, CEO or Co-CEO can use this.", ephemeral=True
             )
 
-        tickets = [t for t in await store.list_all() if t["kind"] == "order"]
+        tickets = [t for t in await store.list_all() if t["kind"] in ("order", "purchase")]
         await interaction.response.send_message(
             view=TicketPickerView(tickets, interaction.guild), ephemeral=True
         )
