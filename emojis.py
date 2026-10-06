@@ -18,7 +18,7 @@ GENERAL = {
     "log_close": "<a:name:1544996055462977556>",
     "place_order": "<a:name:1545552914334875800>",
     "order_accept": "<:name:1544994894370578474>",
-    "order_done": "<:name:1544994871369273424>",
+    "order_done": "<:name:1544994894370578474>",
     "order_cancel": "<:name:1545364084499808256>",
     "order_pending": "<a:name:1548350905802424441>",
     "support_title": "<:name:1545553071872933898>",
