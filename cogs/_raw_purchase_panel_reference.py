@@ -61,7 +61,6 @@ class PurchasePanelView(ui.LayoutView):
                 accessory=order_btn,
             ),
             ui.Separator(visible=True, spacing=discord.SeparatorSpacing.large),
-            ),
             ui.TextDisplay(
                 "-# <a:name:1545576625574387762> Opening tickets without a reason may result in a warning.\n"
                 "-# <:name:1545831836339409048> GlobalBots All Rights Reserved ©"
@@ -71,7 +70,6 @@ class PurchasePanelView(ui.LayoutView):
 
         container = ui.Container(*children, accent_colour=None)
         self.add_item(container)
-
     async def on_purchase(self, interaction: discord.Interaction) -> None:
         from cogs.purchase_order_flow import start_purchase_flow
         await start_purchase_flow(interaction)
