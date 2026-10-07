@@ -6,7 +6,7 @@ Posted via /send-panel and re-registered as a persistent view on startup.
 import discord
 from discord import ui
 
-BANNER_URL = "https://i.imgur.com/1kOkAt9.png"  # <-- set a real image URL here before going live
+BANNER_URL = "https://i.imgur.com/6qASJbL.gif"  # <-- set a real image URL here before going live
 
 
 class PurchasePanelView(ui.LayoutView):
