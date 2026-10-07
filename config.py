@@ -54,7 +54,7 @@ TICKET_CATEGORIES: dict[str, int] = {
 # URLs used for the ticket panel (banner + thumbnail). Leave as None to skip.
 # The per-ticket panel inside each ticket channel only ever shows a
 # thumbnail (the customer's avatar) — no banner there, by design.
-PANEL_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
+PANEL_BANNER_URL: str | None = "https://i.imgur.com/6qASJbL.gif"
 PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
 # --- Support ticket system (Owner / General Support / Technical / Billing) ---
@@ -72,14 +72,14 @@ TICKET_KIND_STAFF_ROLES: dict[str, list[int]] = {
 }
 
 SUPPORT_PANEL_CHANNEL: int = 1545576092323287101
-SUPPORT_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
+SUPPORT_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 SUPPORT_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
 SUPPORT_LOG_CHANNEL: int = 1545572161014726756
 
 # --- Giveaways / Reviews banners ---
-GIVEAWAY_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
-REVIEWS_BANNER_URL: str | None = "https://i.imgur.com/qUfaZMv.png"
+GIVEAWAY_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
+REVIEWS_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 REVIEWS_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
 BOT_TOKEN: str = _env_or("BOT_TOKEN", "PUT_YOUR_BOT_TOKEN_HERE")
