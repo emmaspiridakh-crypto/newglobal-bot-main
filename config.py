@@ -54,7 +54,7 @@ TICKET_CATEGORIES: dict[str, int] = {
 # URLs used for the ticket panel (banner + thumbnail). Leave as None to skip.
 # The per-ticket panel inside each ticket channel only ever shows a
 # thumbnail (the customer's avatar) — no banner there, by design.
-PANEL_BANNER_URL: str | None = "https://i.imgur.com/6qASJbL.gif"
+PANEL_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
 # --- Support ticket system (Owner / General Support / Technical / Billing) ---
