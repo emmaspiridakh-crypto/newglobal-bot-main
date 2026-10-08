@@ -40,7 +40,7 @@ def _build_review_container(*, guild: discord.Guild, author: discord.abc.User, r
     add_separator(container)
     bullet = emoji("reviews", "bullet") or "»"
     add_text(container, (
-        f"{emoji('reviews', 'user')} Από {author.mention}\n"
+        f"{emoji('reviews', 'user')} From {author.mention}\n"
         f"{bullet} {_stars(rating)} ({rating}/5)"
     ))
     add_separator(container)
