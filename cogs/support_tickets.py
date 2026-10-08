@@ -171,7 +171,7 @@ class SupportPanelView(discord.ui.LayoutView):
     async def on_owner(self, interaction: discord.Interaction) -> None:
         await interaction.response.send_modal(ProblemModal("owner"))
 
-    async def on_owner(self, interaction: discord.Interaction) -> None:
+    async def on_manager(self, interaction: discord.Interaction) -> None:
         await interaction.response.send_modal(ProblemModal("manager"))
 
     async def on_general(self, interaction: discord.Interaction) -> None:
