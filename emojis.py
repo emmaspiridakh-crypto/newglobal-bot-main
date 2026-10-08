@@ -51,14 +51,14 @@ SUGGESTIONS = {
 # Not present in the original config — filled with sensible defaults,
 # replace with your own custom emoji IDs if you have them.
 REVIEWS = {
-    "review": "<a:name:1544996461245112390>",
-    "star_filled": "<a:name:1544996461245112390>",
+    "review": "<:name:1557703805041119304>",
+    "star_filled": "<:name:1557703805041119304>",
     "star_empty": "<:name:>",
     "user": "<:name:1547475085588303943>",
     "comment": "<:name:1544996395373559869>",
     "date": "<:name:1547464754593796106>",
     "bullet": "<:name:1545576267904974859>",
-    "make_review": "<a:name:1544996461245112390>",
+    "make_review": "<:name:1557703805041119304>",
 }
 
 GIVEAWAY = {
