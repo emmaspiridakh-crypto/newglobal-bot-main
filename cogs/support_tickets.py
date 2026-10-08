@@ -10,7 +10,7 @@ from cogs.tickets import create_ticket_channel
 
 CATEGORY_LABELS = {
     "owner": "Contact Owner",
-    "management": "Talk to Managemet Team",
+    "manager": "Talk to Managemet Team",
     "general": "General Support",
     "technical": "Technical Issue",
     "billing": "Billing Issue",
@@ -98,7 +98,7 @@ class SupportPanelView(discord.ui.LayoutView):
             label="Management Team", style=discord.ButtonStyle.secondary,
             emoji=EMOJI["support_manager"], custom_id="support:open:manager",
         )
-        support_btn.callback = self.on_general
+        support_btn.callback = self.on_manager
         children.append(discord.ui.TextDisplay(f"- {EMOJI['support_manager']} __**Talk to Management Team**__"))
         children.append(
             discord.ui.Section(
@@ -170,6 +170,9 @@ class SupportPanelView(discord.ui.LayoutView):
 
     async def on_owner(self, interaction: discord.Interaction) -> None:
         await interaction.response.send_modal(ProblemModal("owner"))
+
+    async def on_owner(self, interaction: discord.Interaction) -> None:
+        await interaction.response.send_modal(ProblemModal("manager"))
 
     async def on_general(self, interaction: discord.Interaction) -> None:
         await interaction.response.send_modal(ProblemModal("general"))
