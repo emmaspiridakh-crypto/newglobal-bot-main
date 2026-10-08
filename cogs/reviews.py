@@ -14,18 +14,15 @@ from utils.permissions import slash_is_staff_team
 
 STORE_NAME = "reviews"
 
-GREEK_DAYS = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"]
-GREEK_MONTHS = [
-    "", "Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου",
-    "Ιουλίου", "Αυγούστου", "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου",
-]
+ENGLISH_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+ENGLISH_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 
 def _greek_date(dt: _dt.datetime) -> str:
-    day_name = GREEK_DAYS[dt.weekday()]
+    day_name = ENGLISH_DAYS[dt.weekday()]
     hour12 = dt.hour % 12 or 12
-    period = "πμ" if dt.hour < 12 else "μμ"
-    return f"{day_name}, {dt.day} {GREEK_MONTHS[dt.month]} {dt.year} {hour12:02d}:{dt.minute:02d} {period}"
+    period = "am" if dt.hour < 12 else "pm"
+    return f"{day_name}, {dt.day} {ENGLISH_MONTHS[dt.month]} {dt.year} {hour12:02d}:{dt.minute:02d} {period}"
 
 
 def _stars(rating: int) -> str:
@@ -37,7 +34,7 @@ def _stars(rating: int) -> str:
 def _build_review_container(*, guild: discord.Guild, author: discord.abc.User, rating: int, comment: str, created_at: _dt.datetime) -> ui.Container:
     thumb = guild.icon.url if guild and guild.icon else None
     container = build_base_container(
-        title=f"{emoji('reviews', 'review')} • Νέο Review",
+        title=f"{emoji('reviews', 'review')} • New Review",
         thumbnail_url=thumb,
     )
     add_separator(container)
@@ -49,15 +46,15 @@ def _build_review_container(*, guild: discord.Guild, author: discord.abc.User, r
     add_separator(container)
     add_text(container, f"{emoji('reviews', 'comment')} {comment}")
     add_separator(container)
-    add_text(container, f"{emoji('reviews', 'date')} {_greek_date(created_at)}")
+    add_text(container, f"{emoji('reviews', 'date')} {_english__date(created_at)}")
     return container
 
 
-class ReviewCommentModal(ui.Modal, title="Σχόλιο Review"):
+class ReviewCommentModal(ui.Modal, title="Review Commend"):
     comment = ui.TextInput(
-        label="Το σχόλιό σου",
+        label="Review Commend",
         style=discord.TextStyle.paragraph,
-        placeholder="Γράψε εδώ την εμπειρία σου...",
+        placeholder="Tell us your experience...",
         required=True,
         max_length=1000,
     )
@@ -93,7 +90,7 @@ class ReviewCommentModal(ui.Modal, title="Σχόλιο Review"):
         storage.save(STORE_NAME, store)
 
         await interaction.response.send_message(
-            f"{emoji('reviews', 'review') or '⭐'} Ευχαριστούμε για το review σου!", ephemeral=True
+            f"{emoji('reviews', 'review') or '⭐'} Thank you for your reniew!", ephemeral=True
         )
 
 
@@ -101,14 +98,14 @@ class RatingSelect(ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label=f"{i} από 5",
+                label=f"{i} in 5",
                 value=str(i),
                 emoji=emoji("reviews", "star_filled") or "⭐",
-                description="Πόσο καλή ήταν η εμπειρία σου;" if i == 5 else None,
+                description="Tell us about your experience with our services" if i == 5 else None,
             )
             for i in range(5, 0, -1)
         ]
-        super().__init__(placeholder="Επίλεξε βαθμολογία...", min_values=1, max_values=1, options=options)
+        super().__init__(placeholder="Choose a rating...", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
         rating = int(self.values[0])
@@ -125,15 +122,15 @@ class ReviewPanelView(ui.LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         container = build_base_container(
-            title=f"{emoji('reviews', 'review')} Άφησε ένα Review",
-            description="Πάτα το κουμπί από κάτω για να μοιραστείς την εμπειρία σου μαζί μας!",
+            title=f"{emoji('reviews', 'review')} GlobalBots | Review Center",
+            description="Click the button bellow and leave a review about your experience you had with our services.",
             banner_url=config.REVIEWS_BANNER_URL or None,
             thumbnail_url=config.REVIEWS_THUMBNAIL_URL or None,
         )
         add_separator(container)
         btn = ui.Button(
-            label="Make a Review",
-            style=discord.ButtonStyle.success,
+            label="Review us",
+            style=discord.ButtonStyle.secondary,
             emoji=emoji("reviews", "make_review"),
             custom_id="review:open",
         )
@@ -160,7 +157,7 @@ class Reviews(commands.Cog):
         if interaction.data.get("custom_id") != "review:open":
             return
         await interaction.response.send_message(
-            f"{emoji('reviews', 'review') or '⭐'} Επίλεξε βαθμολογία 1-5:",
+            f"{emoji('reviews', 'review') or '⭐'} Choose a star rating between 1-5",
             view=RatingSelectView(),
             ephemeral=True,
         )
