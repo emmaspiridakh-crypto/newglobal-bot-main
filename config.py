@@ -70,7 +70,7 @@ TICKET_KIND_STAFF_ROLES: dict[str, list[int]] = {
     "purchase": [ROLE_OWNERSHIP],
     "general": [ROLE_STAFF, ROLE_MANAGER],
     "technical": [ROLE_DEVELOPER, ROLE_OWNERSHIP],
-    "manager": [ROLE_MANAGER]
+    "manager": [ROLE_MANAGER],
     "billing": [ROLE_OWNERSHIP],
 }
 
