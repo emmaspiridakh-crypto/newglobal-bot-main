@@ -23,6 +23,7 @@ GENERAL = {
     "order_pending": "<a:name:1548350905802424441>",
     "support_title": "<:name:1545553071872933898>",
     "support_owner": "<:name:1545576744956727306>",
+    "support_manager": "<name:1557694211602513950>",
     "support_general": "<:name:1548740498603122788>",
     "support_technical": "<:name:1545577232922312734>",
     "support_billing": "<:name:1545553195760099358>",
