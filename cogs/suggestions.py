@@ -16,18 +16,15 @@ STORE_NAME = "suggestions"
 
 LINK_RE = re.compile(r"(https?://|www\.|discord\.gg/|discord\.com/invite/)", re.IGNORECASE)
 
-GREEK_DAYS = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"]
-GREEK_MONTHS = [
-    "", "Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου",
-    "Ιουλίου", "Αυγούστου", "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου",
-]
+ENGLISH_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+ENGLISH_MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 
 def _greek_date(dt: _dt.datetime) -> str:
-    day_name = GREEK_DAYS[dt.weekday()]
+    day_name = ENGLISH_DAYS[dt.weekday()]
     hour12 = dt.hour % 12 or 12
-    period = "πμ" if dt.hour < 12 else "μμ"
-    return f"{day_name}, {dt.day} {GREEK_MONTHS[dt.month]} {dt.year} {hour12:02d}:{dt.minute:02d} {period}"
+    period = "am" if dt.hour < 12 else "pm"
+    return f"{day_name}, {dt.day} {ENGLISH_MONTHS[dt.month]} {dt.year} {hour12:02d}:{dt.minute:02d} {period}"
 
 
 class Suggestions(commands.Cog):
@@ -46,7 +43,7 @@ class Suggestions(commands.Cog):
         add_separator(container)
         bullet = emoji("suggestions", "bullet") or "»"
         add_text(container, (
-            f"{emoji('suggestions', 'submitted')} Submitted From {author.mention if author else 'Άγνωστος'}\n"
+            f"{emoji('suggestions', 'submitted')} Submitted From {author.mention if author else 'Unknown'}\n"
             f"{bullet} {_greek_date(created_at)}"
         ))
         add_separator(container)
