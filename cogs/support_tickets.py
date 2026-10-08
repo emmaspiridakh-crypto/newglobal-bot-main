@@ -157,9 +157,9 @@ class SupportPanelView(discord.ui.LayoutView):
                 f"**{EMOJI['support_process']} __TICKET PROCESS__**\n\n"
                 f"{EMOJI['support_step']} Choose the category that best matches your request.\n"
                 f"{EMOJI['support_step']} Please provide a proper description of your issue or request.\n"
-                f"{EMOJI['support_step']} Our Team will review your ticket and assist you as soon as possible.\n\n"
+                f"{EMOJI['support_step']} Our Team will review your ticket and assist you as soon as possible.\n"
+                f"{EMOJI['support_step']} Please don't open an owner ticket without an important reason. \n\n"
                 f"> -# {EMOJI['support_warning']} Opening tickets without a reason may result in a warning"
-                f"> -# {EMOJI['support_warning']} Please don't open an owner ticket without an important reason"
             )
         )
         children.append(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
