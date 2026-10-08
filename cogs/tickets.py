@@ -20,12 +20,13 @@ log = logging.getLogger(__name__)
 # Ticket "kinds" that belong to the support-panel system (Owner / General
 # Support / Technical / Billing) use their own staff roles + category,
 # configured separately from the shop's Purchase/Order tickets.
-SUPPORT_KINDS = {"owner", "general", "technical", "billing"}
+SUPPORT_KINDS = {"owner", "manager", "general", "technical", "billing"}
 
 TICKET_TITLES = {
     "purchase": f"{EMOJI['purchase']} Purchase Ticket",
     "order": f"{EMOJI['order']} Order Ticket",
     "owner": f"{EMOJI['support_owner']} Contact Owner Ticket",
+    "manager": f"{EMOJI['support_manager']} Talk To Management Team",
     "general": f"{EMOJI['support_general']} General Support Ticket",
     "technical": f"{EMOJI['support_technical']} Technical Issue Ticket",
     "billing": f"{EMOJI['support_billing']} Billing Issue Ticket",
@@ -37,6 +38,7 @@ TICKET_ACCENT_COLOURS = {
     "purchase": discord.Colour.blue(),
     "order": discord.Colour.blue(),
     "owner": discord.Color.blue(),
+    "manager": discord.Color.blue(),
     "general": discord.Colour.blue(),
     "technical": discord.Colour.blue(),
     "billing": discord.Colour.blue(),
@@ -281,8 +283,6 @@ class ClaimButton(
 
         await interaction.followup.send(
             f"{EMOJI['claim']} Ticket claimed by {interaction.user.mention}.\n"
-            f"-# Other staff can no longer write here unless "
-            f"{interaction.user.mention} or the CEO adds them with Modify."
         )
         if lock_failed:
             await interaction.followup.send(
@@ -393,7 +393,6 @@ class TranscriptButton(
                 label="View Transcript",
                 style=discord.ButtonStyle.secondary,
                 emoji=EMOJI["transcript"],
-                custom_id=f"ticket:transcript:{channel_id}",
             )
         )
 
@@ -449,7 +448,6 @@ class DMTranscriptButton(
             discord.ui.Button(
                 label="Transcript",
                 style=discord.ButtonStyle.secondary,
-                custom_id=f"ticket:dmtranscript:{channel_id}",
             )
         )
 
@@ -512,7 +510,7 @@ async def authorize_modify(interaction: discord.Interaction, channel_id: int) ->
         return None
     if not ticket.get("claimed_by"):
         await interaction.response.send_message(
-            "Claim this ticket first — Modify only matters once it is claimed.", ephemeral=True
+            "Claim this ticket first. Modify only matters once it is claimed.", ephemeral=True
         )
         return None
     return ticket
