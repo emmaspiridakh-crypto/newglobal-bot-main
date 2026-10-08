@@ -15,7 +15,7 @@ from utils.permissions import slash_is_staff_team
 STORE_NAME = "reviews"
 
 ENGLISH_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-ENGLISH_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+ENGLISH_MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 
 def _greek_date(dt: _dt.datetime) -> str:
