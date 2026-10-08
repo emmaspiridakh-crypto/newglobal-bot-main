@@ -10,6 +10,7 @@ from cogs.tickets import create_ticket_channel
 
 CATEGORY_LABELS = {
     "owner": "Contact Owner",
+    "management": "Talk to Managemet Team",
     "general": "General Support",
     "technical": "Technical Issue",
     "billing": "Billing Issue",
@@ -94,6 +95,20 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(discord.ui.Separator())
 
         support_btn = discord.ui.Button(
+            label="Management Team", style=discord.ButtonStyle.secondary,
+            emoji=EMOJI["support_manager"], custom_id="support:open:manager",
+        )
+        support_btn.callback = self.on_general
+        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_manager']} __**Talk to Management Team**__"))
+        children.append(
+            discord.ui.Section(
+                discord.ui.TextDisplay("> Speak to the management team if you have any problem or a important question."),
+                accessory=support_btn,
+            )
+        )
+        children.append(discord.ui.Separator())
+
+        support_btn = discord.ui.Button(
             label="Support", style=discord.ButtonStyle.secondary,
             emoji=EMOJI["support_general"], custom_id="support:open:general",
         )
@@ -115,7 +130,7 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(discord.ui.TextDisplay(f"- {EMOJI['support_technical']} __**Technical Issues**__"))
         children.append(
             discord.ui.Section(
-                discord.ui.TextDisplay("> Problems with our bot, bugs, systems not working."),
+                discord.ui.TextDisplay("> For bugs, systems not working or troubles with the hosting system."),
                 accessory=technical_btn,
             )
         )
@@ -130,7 +145,7 @@ class SupportPanelView(discord.ui.LayoutView):
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay(
-                    "> If you have a problem with your payment or something didn't go through."
+                    "> If you have a problem with your payment."
                 ),
                 accessory=billing_btn,
             )
@@ -144,6 +159,7 @@ class SupportPanelView(discord.ui.LayoutView):
                 f"{EMOJI['support_step']} Please provide a proper description of your issue or request.\n"
                 f"{EMOJI['support_step']} Our Team will review your ticket and assist you as soon as possible.\n\n"
                 f"> -# {EMOJI['support_warning']} Opening tickets without a reason may result in a warning"
+                f"> -# {EMOJI['support_warning']} Please don't open an owner ticket without an important reason"
             )
         )
         children.append(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
