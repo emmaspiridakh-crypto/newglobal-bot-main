@@ -47,7 +47,7 @@ TICKET_CATEGORIES: dict[str, int] = {
     "purchase": CATEGORY_PURCHASE,
     "order": CATEGORY_ORDER,
     "owner": CATEGORY_OWNER,
-    "manager": CATEGORY_MANAGER
+    "manager": CATEGORY_MANAGER,
     "general": CATEGORY_GENERAL,
     "technical": CATEGORY_TECHNICAL,
     "billing": CATEGORY_BILLING,
