@@ -394,6 +394,7 @@ class TranscriptButton(
                 label="View Transcript",
                 style=discord.ButtonStyle.secondary,
                 emoji=EMOJI["transcript"],
+                custom_id=f"ticket:transcript:{channel_id}",
             )
         )
 
@@ -449,6 +450,7 @@ class DMTranscriptButton(
             discord.ui.Button(
                 label="Transcript",
                 style=discord.ButtonStyle.secondary,
+                custom_id=f"ticket:dmtranscript:{channel_id}",
             )
         )
 
@@ -1021,35 +1023,50 @@ async def close_ticket(interaction: discord.Interaction, channel_id: int, reason
         f"{EMOJI['close']} Closing this ticket in 5 seconds..."
     )
 
-    transcript_file = await build_transcript(channel)
-    transcript_path = TRANSCRIPTS_DIR / f"{channel_id}.txt"
-    transcript_path.write_bytes(transcript_file.fp.getvalue())
-    transcript_file.fp.seek(0)
-
-    if customer is not None:
-        try:
-            await customer.send(
-                view=build_close_dm_view(
-                    guild, channel, customer, interaction.user, reason, closed_at,
-                    transcript_path.name,
-                ),
-                file=discord.File(transcript_path, filename=transcript_path.name),
-            )
-        except discord.HTTPException:
-            # DMs closed (Forbidden) or Discord rejected it — never block the close.
-            log.warning("Could not DM the close notice to %s (%s)", customer, customer.id)
-
+    # Whatever happens below, the channel MUST be deleted at the end —
+    # every step is isolated so one failure can't leave the ticket stuck on
+    # "Closing this ticket in 5 seconds...". Errors show up in the Render logs.
     try:
-        await log_ticket_close(guild, channel, customer, kind, interaction.user, reason, transcript_path)
-    except Exception:
-        log.exception("Failed to log ticket close for channel %s", channel_id)
+        transcript_path = None
+        try:
+            transcript_file = await build_transcript(channel)
+            transcript_path = TRANSCRIPTS_DIR / f"{channel_id}.txt"
+            transcript_path.write_bytes(transcript_file.fp.getvalue())
+        except Exception:
+            log.exception("Failed to build transcript for channel %s", channel_id)
+            transcript_path = None
 
-    await store.delete(channel_id)
+        if customer is not None and transcript_path is not None:
+            try:
+                await customer.send(
+                    view=build_close_dm_view(
+                        guild, channel, customer, interaction.user, reason, closed_at,
+                        transcript_path.name,
+                    ),
+                    file=discord.File(transcript_path, filename=transcript_path.name),
+                )
+            except Exception:
+                # DMs closed (Forbidden) or anything else — never block the close.
+                log.exception("Could not DM the close notice to %s (%s)", customer, customer.id)
 
-    await discord.utils.sleep_until(
-        dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=5)
-    )
-    await channel.delete(reason=f"Ticket closed by {interaction.user} — {reason}")
+        if transcript_path is not None:
+            try:
+                await log_ticket_close(
+                    guild, channel, customer, kind, interaction.user, reason, transcript_path
+                )
+            except Exception:
+                log.exception("Failed to log ticket close for channel %s", channel_id)
+
+        try:
+            await store.delete(channel_id)
+        except Exception:
+            log.exception("Failed to delete ticket %s from the store", channel_id)
+    finally:
+        await asyncio.sleep(5)
+        try:
+            await channel.delete(reason=f"Ticket closed by {interaction.user} — {reason}")
+        except Exception:
+            log.exception("Failed to delete ticket channel %s", channel_id)
 
 
 def build_close_dm_view(
