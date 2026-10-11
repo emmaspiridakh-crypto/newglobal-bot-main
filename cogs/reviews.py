@@ -18,7 +18,7 @@ ENGLISH_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturda
 ENGLISH_MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 
-def _greek_date(dt: _dt.datetime) -> str:
+def _english_date(dt: _dt.datetime) -> str:
     day_name = ENGLISH_DAYS[dt.weekday()]
     hour12 = dt.hour % 12 or 12
     period = "am" if dt.hour < 12 else "pm"
