@@ -18,7 +18,7 @@ ENGLISH_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturda
 ENGLISH_MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 
-def _english_date(dt: _dt.datetime) -> str:
+def _format_date(dt: _dt.datetime) -> str:
     day_name = ENGLISH_DAYS[dt.weekday()]
     hour12 = dt.hour % 12 or 12
     period = "am" if dt.hour < 12 else "pm"
@@ -46,7 +46,7 @@ def _build_review_container(*, guild: discord.Guild, author: discord.abc.User, r
     add_separator(container)
     add_text(container, f"{emoji('reviews', 'comment')} {comment}")
     add_separator(container)
-    add_text(container, f"{emoji('reviews', 'date')} {_english__date(created_at)}")
+    add_text(container, f"{emoji('reviews', 'date')} {_format__date(created_at)}")
     return container
 
 
