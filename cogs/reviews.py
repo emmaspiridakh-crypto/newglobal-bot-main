@@ -46,7 +46,7 @@ def _build_review_container(*, guild: discord.Guild, author: discord.abc.User, r
     add_separator(container)
     add_text(container, f"{emoji('reviews', 'comment')} {comment}")
     add_separator(container)
-    add_text(container, f"{emoji('reviews', 'date')} {_format__date(created_at)}")
+    add_text(container, f"{emoji('reviews', 'date')} {_format_date(created_at)}")
     return container
 
 
