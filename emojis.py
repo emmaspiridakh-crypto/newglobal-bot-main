@@ -81,7 +81,27 @@ GIVEAWAY = {
     "add_member": "<:name:1544996128809029702>",
 }
 
+APPLICATIONS = {
+    # Developer Application panel (from the DWEEB design)
+    "title": "<:name:1563918477746503830>",
+    "info": "<:name:1545576267904974859>",
+    "process": "<:name:1545579981030162432>",
+    "step": "<a:name:1545552914334875800>",
+    "disclaimer": "<:name:1563933758824914965>",
+    "apply": "<:name:1563918477746503830>",
+    "footer": "<:name:1545831836339409048>",
+    # Buttons — reusing existing emoji, replace the IDs with your own if you want.
+    "yes": "<:name:1544994894370578474>",
+    "no": "<:name:1545364084499808256>",
+    "send": "<a:name:1545552914334875800>",
+    "accept": "<:name:1544994894370578474>",
+    "deny": "<:name:1545364084499808256>",
+    "close": "<:name:1545364084499808256>",
+    "ping": "<:name:1545365144538718260>",
+}
+
 _CATEGORIES = {
+    "applications": APPLICATIONS,
     "general": GENERAL,
     "suggestions": SUGGESTIONS,
     "reviews": REVIEWS,
