@@ -85,6 +85,45 @@ GIVEAWAY_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 REVIEWS_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 REVIEWS_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
+# --- Developer applications ---
+# Category where each applicant's private application channel is created
+# (0 = no category, channel is created at the top level).
+APPLICATIONS_CATEGORY_ID: int = 1563946311668072498
+# Staff-only channel where submitted applications arrive for review. REQUIRED —
+# applicants can't press "Sent" until this is filled in.
+APPLICATIONS_LOG_CHANNEL_ID: int = 1563946425417601054
+# Roles that can see the application channels, use Ping User / Close.
+APPLICATION_STAFF_ROLE_IDS: list[int] = [ROLE_OWNERSHIP, ROLE_CEO, ROLE_CO_CEO]
+# Roles that can Accept / Deny and use Show Answers in the log channel.
+APPLICATION_REVIEW_ROLE_IDS: list[int] = [ROLE_OWNERSHIP, ROLE_CEO, ROLE_CO_CEO]
+# Role given to the applicant when accepted (0 = give no role).
+APPLICATION_ACCEPTED_ROLE_ID: int = ROLE_DEVELOPER
+# Banner shown at the top of the /panel-applications panel (None = no banner).
+APPLICATIONS_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
+
+# Questions asked in the application. A plain string is a normal question
+# (the applicant types the answer and can attach photos/files); a dict with
+# "type": "yesno" shows Yes / No buttons instead.
+# NOTE: these are SAMPLE questions — replace them with your own.
+APPLICATION_QUESTIONS: list = [
+    "How old are you?",
+    "Which programming languages do you work with?",
+    {"text": "Do you have experience building Discord bots?", "type": "yesno"},
+    "How many years of development experience do you have?",
+    "Why do you want to join our development team?",
+    "Send a photo of something you have created, or a link to a server where your work is hosted.",
+    "Do you work at another shop that deals with bots? And if so, where, and what is your position?",
+    "Do you work with components v2?",
+    "How many hours are you active during the week, and how many hours will you be able to work?",
+    {"text": "Are you aware that it is prohibited to share customers personal information, and that doing so will result in serious penalties?", "type": "yesno"},
+]
+
+# Application types. Only "developer" exists; its custom_id on the panel
+# button is "app_apply:developer".
+APPLICATION_TYPES: dict[str, dict] = {
+    "developer": {"label": "Developer", "questions": APPLICATION_QUESTIONS},
+}
+
 BOT_TOKEN: str = _env_or("BOT_TOKEN", "PUT_YOUR_BOT_TOKEN_HERE")
 
 TURSO_URL: str = _env_or("TURSO_URL", "libsql://your-database-name.turso.io")
