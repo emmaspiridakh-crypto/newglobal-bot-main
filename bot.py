@@ -59,6 +59,7 @@ async def main():
         await bot.load_extension("cogs.giveaways")
         await bot.load_extension("cogs.reviews")
         await bot.load_extension("cogs.suggestions")
+        await bot.load_extension("cogs.applications")
         await bot.start(config.BOT_TOKEN)
 
 
