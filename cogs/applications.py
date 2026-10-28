@@ -86,7 +86,7 @@ def build_panel_view() -> ui.LayoutView:
     if config.APPLICATIONS_BANNER_URL:
         container.add_item(ui.MediaGallery(discord.MediaGalleryItem(media=config.APPLICATIONS_BANNER_URL)))
         add_separator(container)
-    add_text(container, f"# {e('title')}** Developer Application**")
+    add_text(container, f"# {e('title')}** 〃 Developer Application**")
     add_separator(container)
     add_text(
         container,
@@ -95,7 +95,7 @@ def build_panel_view() -> ui.LayoutView:
         "with you regarding further information and the results.__",
     )
     add_separator(container)
-    add_text(container, f"### {e('process')} **__APPLICATION PROCESS__**")
+    add_text(container, f"### {e('process')} 〃 **__APPLICATION PROCESS__**")
     add_text(
         container,
         f"> {e('step')} Click the **\"Apply\"** button and go to the channel that opens.\n"
@@ -109,9 +109,10 @@ def build_panel_view() -> ui.LayoutView:
     add_separator(container)
     add_text(
         container,
-        f"> **{e('disclaimer')} __Disclaimer:__**\n"
+        f"> **{e('disclaimer')} 〃 __Disclaimer:__**\n"
         "> We might have a few more questions, so keep an eye on the application channel.",
     )
+    add_separator(container)
     add_action_row(
         container,
         ui.Button(
@@ -122,7 +123,7 @@ def build_panel_view() -> ui.LayoutView:
         ),
     )
     add_separator(container)
-    add_text(container, f"> -# {e('footer')} GlobalBots Application System")
+    add_text(container, f"> -# {e('footer')} 〃 GlobalBots - Application System")
 
     view = ui.LayoutView(timeout=None)
     view.add_item(container)
