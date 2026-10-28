@@ -76,7 +76,7 @@ def close_denied_reason(member: discord.Member, ticket: dict) -> str | None:
     if not claimed_by:
         return "This ticket has not been claimed yet. Claim it first, or ask the CEO to close it."
     if member.id != claimed_by:
-        return f"Only <@{claimed_by}> (who claimed this ticket) or the CEO can close it."
+        return f"Only <@{claimed_by}> or the CEO can close it."
     return None
 
 
