@@ -58,7 +58,7 @@ class SupportPanelView(discord.ui.LayoutView):
 
         children.append(discord.ui.Separator())
 
-        title_text = discord.ui.TextDisplay(f"# {EMOJI['support_title']} *GlobalBots Support Center*")
+        title_text = discord.ui.TextDisplay(f"# {EMOJI['support_title']} 〃 *GlobalBots Support Center*")
         intro_text = discord.ui.TextDisplay(
             "**Welcome to our Support Center.**\n"
             "__Choose the category that best matches what you need help with.__"
@@ -85,7 +85,7 @@ class SupportPanelView(discord.ui.LayoutView):
             emoji=EMOJI["support_owner"], custom_id="support:open:owner",
         )
         owner_btn.callback = self.on_owner
-        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_owner']} __**Contact Owner**__"))
+        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_owner']} 〃 __**Contact Owner**__"))
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay("> Direct contact with GlobalBots Administration."),
@@ -99,7 +99,7 @@ class SupportPanelView(discord.ui.LayoutView):
             emoji=EMOJI["support_manager"], custom_id="support:open:manager",
         )
         support_btn.callback = self.on_manager
-        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_manager']} __**Talk to Management Team**__"))
+        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_manager']} 〃 __**Talk to Management Team**__"))
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay("> Speak to the management team if you have any problem or a important question."),
@@ -113,7 +113,7 @@ class SupportPanelView(discord.ui.LayoutView):
             emoji=EMOJI["support_general"], custom_id="support:open:general",
         )
         support_btn.callback = self.on_general
-        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_general']} __**General Support**__"))
+        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_general']} 〃 __**General Support**__"))
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay("> General assistance, questions and support."),
@@ -127,7 +127,7 @@ class SupportPanelView(discord.ui.LayoutView):
             emoji=EMOJI["support_technical"], custom_id="support:open:technical",
         )
         technical_btn.callback = self.on_technical
-        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_technical']} __**Technical Issues**__"))
+        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_technical']} 〃 __**Technical Issues**__"))
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay("> For bugs, systems not working or troubles with the hosting system."),
@@ -141,7 +141,7 @@ class SupportPanelView(discord.ui.LayoutView):
             emoji=EMOJI["support_billing"], custom_id="support:open:billing",
         )
         billing_btn.callback = self.on_billing
-        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_billing']} __**Billing Issue**__"))
+        children.append(discord.ui.TextDisplay(f"- {EMOJI['support_billing']} 〃 __**Billing Issue**__"))
         children.append(
             discord.ui.Section(
                 discord.ui.TextDisplay(
@@ -154,7 +154,7 @@ class SupportPanelView(discord.ui.LayoutView):
 
         children.append(
             discord.ui.TextDisplay(
-                f"**{EMOJI['support_process']} __TICKET PROCESS__**\n\n"
+                f"**{EMOJI['support_process']} 〃 __TICKET PROCESS__**\n\n"
                 f"{EMOJI['support_step']} Choose the category that best matches your request.\n"
                 f"{EMOJI['support_step']} Please provide a proper description of your issue or request.\n"
                 f"{EMOJI['support_step']} Our Team will review your ticket and assist you as soon as possible.\n"
@@ -164,6 +164,7 @@ class SupportPanelView(discord.ui.LayoutView):
         )
         children.append(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
         children.append(discord.ui.TextDisplay("-# *GlobalBots All Rights Reserved ©*"))
+        children.append(discord.ui.Separator(spacing=discord.SeparatorSpacing.small))
 
         container = discord.ui.Container(*children, accent_colour=discord.Colour(0x3D91FF))
         self.add_item(container)
