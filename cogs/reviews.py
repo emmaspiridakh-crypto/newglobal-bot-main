@@ -90,7 +90,7 @@ class ReviewCommentModal(ui.Modal, title="Review Commend"):
         storage.save(STORE_NAME, store)
 
         await interaction.response.send_message(
-            f"{emoji('reviews', 'review') or '⭐'} Thank you for your reniew!", ephemeral=True
+            f"{emoji('reviews', 'review') or '⭐'} Thank you for your review!", ephemeral=True
         )
 
 
@@ -122,7 +122,7 @@ class ReviewPanelView(ui.LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         container = build_base_container(
-            title=f"{emoji('reviews', 'review')} GlobalBots | Review Center",
+            title=f"**{emoji('reviews', 'review')} 〃 __GlobalBots - Review Center__**",
             description="Click the button bellow and leave a review about your experience you had with our services.",
             banner_url=config.REVIEWS_BANNER_URL or None,
             thumbnail_url=config.REVIEWS_THUMBNAIL_URL or None,
