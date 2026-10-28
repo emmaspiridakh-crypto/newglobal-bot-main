@@ -59,6 +59,14 @@ TICKET_CATEGORIES: dict[str, int] = {
 PANEL_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
+# --- Purchase Center panel (/send-panel). Set a URL, or None to skip that element. ---
+PURCHASE_PANEL_BANNER_URL: str | None = "https://i.imgur.com/27wjd53.jpeg"  # <-- put the global_banner_PURCHASE image URL here
+PURCHASE_PANEL_LOGO_URL: str | None = "https://i.imgur.com/VeuJpKh.jpeg"   # <-- put the GLOBAL_LOGO image URL here
+PURCHASE_PANEL_FOOTER_GIF_URL: str | None = "https://i.imgur.com/6qASJbL.gif"
+PURCHASE_PANEL_SHOWCASE_URL = "https://discord.com/channels/1544741507049721926/1548765588225003560"
+PURCHASE_PANEL_TOS_URL = "https://discord.com/channels/1544741507049721926/1545533420128575658"
+PURCHASE_PANEL_PRIVACY_URL = "https://discord.com/channels/1544741507049721926/1545533422347223200"
+
 # --- Support ticket system (Owner / General Support / Technical / Billing) ---
 # staff_roles is its own list of role IDs — fill it in yourself, it can
 # overlap with or differ from ROLE_DEVELOPER/ROLE_CEO/ROLE_CO_CEO above.
