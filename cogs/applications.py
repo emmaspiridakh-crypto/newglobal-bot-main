@@ -86,7 +86,7 @@ def build_panel_view() -> ui.LayoutView:
     if config.APPLICATIONS_BANNER_URL:
         container.add_item(ui.MediaGallery(discord.MediaGalleryItem(media=config.APPLICATIONS_BANNER_URL)))
         add_separator(container)
-    add_text(container, f"# {e('title')}** 〃 Developer Application**")
+    add_text(container, f"# {e('title')}** 〃 __Developer Application__**")
     add_separator(container)
     add_text(
         container,
@@ -95,7 +95,7 @@ def build_panel_view() -> ui.LayoutView:
         "with you regarding further information and the results.__",
     )
     add_separator(container)
-    add_text(container, f"### {e('process')} 〃 **__APPLICATION PROCESS__**")
+    add_text(container, f"### {e('process')}** 〃 __APPLICATION PROCESS__**")
     add_text(
         container,
         f"> {e('step')} Click the **\"Apply\"** button and go to the channel that opens.\n"
