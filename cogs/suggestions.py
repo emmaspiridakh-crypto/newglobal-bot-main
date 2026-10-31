@@ -15,7 +15,7 @@ from utils import storage
 STORE_NAME = "suggestions"
 
 # Banner image link comes from config.SUGGESTIONS_BANNER_URL (empty = no banner).
-BANNER_URL = getattr(config, "SUGGESTIONS_BANNER_URL", "")
+BANNER_URL = getattr(config, "https://i.imgur.com/dU42Vu3.jpeg", "")
 
 ACCENT_COLOUR = 0x0088FF
 
@@ -99,13 +99,13 @@ class Suggestions(commands.Cog):
         if has_mentions or has_link:
             try:
                 await message.delete()
-            except discord.Forbidden:
+            except (discord.Forbidden, discord.NotFound):
                 pass
 
             reason = "tags" if has_mentions and not has_link else "links" if has_link and not has_mentions else "tags ή links"
             try:
                 warning = await message.channel.send(
-                    f"{emoji('suggestions', 'suggestion') or '⚠️'} {author.mention} δεν επιτρέπονται **{reason}** μέσα στα suggestions."
+                    f"{emoji('suggestions', 'suggestion') or '⚠️'} {author.mention} No links or tags **{reason}** inside the suggestions."
                 )
                 await warning.delete(delay=6)
             except discord.HTTPException:
@@ -116,7 +116,7 @@ class Suggestions(commands.Cog):
 
         try:
             await message.delete()
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.NotFound):
             pass
 
         temp_view = self._build_view(author=author, text=content, upvotes=0, downvotes=0, msg_id=0, created_at=created_at)
@@ -137,7 +137,7 @@ class Suggestions(commands.Cog):
         store = storage.get_store(STORE_NAME)
         info = store.get(str(msg_id))
         if not info:
-            await interaction.response.send_message("Δεν βρέθηκε αυτό το suggestion.", ephemeral=True)
+            await interaction.response.send_message("Can't find this suggestion.", ephemeral=True)
             return
 
         uid = interaction.user.id
