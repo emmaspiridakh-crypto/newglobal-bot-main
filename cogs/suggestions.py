@@ -15,7 +15,7 @@ from utils import storage
 STORE_NAME = "suggestions"
 
 # Banner image link comes from config.SUGGESTIONS_BANNER_URL (empty = no banner).
-BANNER_URL = getattr(config, "https://i.imgur.com/dU42Vu3.jpeg", "")
+BANNER_URL = getattr(config, "https://i.imgur.com/dU42Vu3.jpeg")
 
 ACCENT_COLOUR = 0x0088FF
 
