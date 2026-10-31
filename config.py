@@ -31,6 +31,10 @@ LOG_GIVEAWAY_CHANNEL_ID: int = 1545573812047716400
 REVIEWS_LOG_CHANNEL_ID: int = 1545533444556066916
 SUGGESTIONS_CHANNEL_ID: int = 1545533516878450708
 
+# Banner image shown at the top of every suggestion. Upload the image to Discord,
+# copy its link and paste it here. Leave empty for no banner.
+SUGGESTIONS_BANNER_URL: str = _env_or("https://i.imgur.com/dU42Vu3.jpeg", "")
+
 TICKET_CATEGORY: int = 1545575251864330270
 
 # Each ticket "kind" now gets its own category. Fill in real IDs — 0 falls
