@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as _dt
+import os
 import re
 
 import discord
@@ -10,9 +11,13 @@ from discord.ext import commands
 import config
 from emojis import emoji
 from utils import storage
-from utils.components import build_base_container, add_separator, add_action_row, add_text
 
-STORE_NAME = "suggestions"  
+STORE_NAME = "suggestions"
+
+# Banner image link comes from config.SUGGESTIONS_BANNER_URL (empty = no banner).
+BANNER_URL = getattr(config, "SUGGESTIONS_BANNER_URL", "")
+
+ACCENT_COLOUR = 0x0088FF
 
 LINK_RE = re.compile(r"(https?://|www\.|discord\.gg/|discord\.com/invite/)", re.IGNORECASE)
 
@@ -35,30 +40,47 @@ class Suggestions(commands.Cog):
         self, *, author: discord.Member, text: str, upvotes: int, downvotes: int,
         msg_id: int, created_at: _dt.datetime,
     ) -> ui.LayoutView:
-        thumb = author.display_avatar.url if author else None
-        container = build_base_container(
-            title=f"{emoji('suggestions', 'suggestion')} • New Suggestion",
-            thumbnail_url=thumb,
-        )
-        add_separator(container)
-        bullet = emoji("suggestions", "bullet") or "»"
-        add_text(container, (
-            f"{emoji('suggestions', 'submitted')} Submitted From {author.mention if author else 'Unknown'}\n"
-            f"{bullet} {_greek_date(created_at)}"
-        ))
-        add_separator(container)
-        add_text(container, text)
-        add_separator(container)
-        up_btn = ui.Button(label=str(upvotes), style=discord.ButtonStyle.success,
-                            emoji=emoji("suggestions", "upvote"), custom_id=f"suggestion_up:{msg_id}")
-        down_btn = ui.Button(label=str(downvotes), style=discord.ButtonStyle.danger,
-                              emoji=emoji("suggestions", "downvote"), custom_id=f"suggestion_down:{msg_id}")
-        remove_btn = ui.Button(label="Remove Vote", style=discord.ButtonStyle.secondary,
-                                custom_id=f"suggestion_removevote:{msg_id}")
-        add_action_row(container, up_btn, down_btn, remove_btn)
+        small = discord.SeparatorSpacing.small
+        large = discord.SeparatorSpacing.large
+        author_text = author.mention if author else "Unknown"
+
+        children: list[ui.Item] = [ui.Separator(visible=True, spacing=small)]
+        if BANNER_URL:
+            children.append(ui.MediaGallery(discord.MediaGalleryItem(BANNER_URL)))
+            children.append(ui.Separator(visible=True, spacing=small))
+
+        children += [
+            ui.TextDisplay(
+                f"> {emoji('suggestions', 'submitted')}〃 __**Submitted From:**__ {author_text}\n"
+                f"> {emoji('suggestions', 'time')} 〃 __**Time:**__ {_greek_date(created_at)}"
+            ),
+            ui.Separator(visible=True, spacing=large),
+            ui.TextDisplay(text),
+            ui.Separator(visible=True, spacing=small),
+            ui.ActionRow(
+                ui.Button(label=f"〃 {upvotes}", style=discord.ButtonStyle.secondary,
+                          emoji=emoji("suggestions", "upvote") or None,
+                          custom_id=f"suggestion_up:{msg_id}"),
+                ui.Button(label=f"〃 {downvotes}", style=discord.ButtonStyle.secondary,
+                          emoji=emoji("suggestions", "downvote") or None,
+                          custom_id=f"suggestion_down:{msg_id}"),
+                ui.Button(label="〃 Remove Vote", style=discord.ButtonStyle.secondary,
+                          emoji=emoji("suggestions", "remove") or None,
+                          custom_id=f"suggestion_removevote:{msg_id}"),
+                ui.Button(label="〃 Total Suggestions", style=discord.ButtonStyle.secondary,
+                          emoji=emoji("suggestions", "total") or None,
+                          custom_id=f"suggestion_total:{msg_id}"),
+            ),
+            ui.Separator(visible=True, spacing=small),
+            ui.TextDisplay(
+                f"> -#  **{emoji('suggestions', 'footer_left')} 〃 GlobalBots, All Rights Reserved "
+                f"{emoji('suggestions', 'bullet')} Suggestion System** "
+            ),
+            ui.Separator(visible=True, spacing=small),
+        ]
 
         view = ui.LayoutView(timeout=None)
-        view.add_item(container)
+        view.add_item(ui.Container(*children, accent_colour=ACCENT_COLOUR))
         return view
 
     @commands.Cog.listener()
@@ -155,6 +177,32 @@ class Suggestions(commands.Cog):
         except discord.HTTPException:
             pass
 
+    def _forget(self, message_ids) -> None:
+        store = storage.get_store(STORE_NAME)
+        removed = False
+        for mid in message_ids:
+            if store.pop(str(mid), None) is not None:
+                removed = True
+        if removed:
+            storage.save(STORE_NAME, store)
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
+        if payload.channel_id == config.SUGGESTIONS_CHANNEL_ID:
+            self._forget([payload.message_id])
+
+    @commands.Cog.listener()
+    async def on_raw_bulk_message_delete(self, payload: discord.RawBulkMessageDeleteEvent):
+        if payload.channel_id == config.SUGGESTIONS_CHANNEL_ID:
+            self._forget(payload.message_ids)
+
+    async def _handle_total(self, interaction: discord.Interaction):
+        total = len(storage.get_store(STORE_NAME))
+        await interaction.response.send_message(
+            f"{emoji('suggestions', 'total')} Total **{total}** suggestions.",
+            ephemeral=True,
+        )
+
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
         if interaction.type != discord.InteractionType.component:
@@ -166,6 +214,8 @@ class Suggestions(commands.Cog):
             await self._handle_vote(interaction, int(custom_id.split(":")[1]), upvote=False)
         elif custom_id.startswith("suggestion_removevote:"):
             await self._handle_vote(interaction, int(custom_id.split(":")[1]), upvote=None)
+        elif custom_id.startswith("suggestion_total:"):
+            await self._handle_total(interaction)
 
 
 async def setup(bot: commands.Bot):
