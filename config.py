@@ -73,7 +73,7 @@ PURCHASE_PANEL_PRIVACY_URL = "https://discord.com/channels/1544741507049721926/1
 
 # --- Informations panel (/panel-info). Set a URL, or None to skip that element. ---
 # Banner: replace with the URL of your global_banner image (currently reuses the purchase banner).
-INFO_PANEL_BANNER_URL: str | None = PURCHASE_PANEL_BANNER_URL
+INFO_PANEL_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 INFO_PANEL_LOGO_URL: str | None = PURCHASE_PANEL_LOGO_URL  # GLOBAL_LOGO
 
 # --- Support ticket system (Owner / General Support / Technical / Billing) ---
