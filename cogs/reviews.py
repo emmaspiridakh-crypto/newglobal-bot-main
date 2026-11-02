@@ -190,7 +190,7 @@ def _build_review_view(record: dict, total_reviews: int, average_rating: float) 
     sep = lambda spacing=discord.SeparatorSpacing.small: ui.Separator(visible=True, spacing=spacing)
     rating = int(record["rating"])
     yes, no = record.get("yes", 0), record.get("no", 0)
-    banner = getattr(config, "REVIEWS_RES_BANNER_URL", None) or config.REVIEWS_BANNER_URL
+    banner = getattr(config, "REVIEWS_BANNER_URL", None) or config.REVIEWS_BANNER_URL
 
     children: list[ui.Item] = [sep()]
     if banner:
