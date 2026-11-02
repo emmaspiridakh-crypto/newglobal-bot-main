@@ -104,7 +104,18 @@ APPLICATIONS = {
     "ping": "<:name:1545365144538718260>",
 }
 
+INFO = {
+    "title": "<:name:1566461391878095091>",
+    "note": "<:name:1566128213858459848>",
+    "tos": "<:name:1566484047943704656>",
+    "privacy": "<:name:1566484521073905824>",
+    "faq": "<:name:1548740498603122788>",
+    "footer": "<:name:1545831836339409048>",
+    "footer_right": "<:name:1545576267904974859>",
+}
+
 _CATEGORIES = {
+    "info": INFO,
     "applications": APPLICATIONS,
     "general": GENERAL,
     "suggestions": SUGGESTIONS,
