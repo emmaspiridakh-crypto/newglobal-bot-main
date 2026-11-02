@@ -279,8 +279,10 @@ class InfoPanel(commands.Cog):
     @app_commands.command(name="panel-info", description="Send the Informations panel (ToS / Privacy / FaQ)")
     @slash_is_ownership_only()
     async def panel_info(self, interaction: discord.Interaction):
+        # Acknowledge first (Discord gives only 3 seconds), then post the panel.
+        await interaction.response.defer(ephemeral=True, thinking=True)
         await interaction.channel.send(view=build_panel_view())
-        await interaction.response.send_message("Panel sent.", ephemeral=True)
+        await interaction.followup.send("Panel sent.", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
