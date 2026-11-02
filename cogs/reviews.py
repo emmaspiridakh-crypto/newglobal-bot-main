@@ -133,10 +133,12 @@ class ReviewStore:
         return removed
 
     async def vote(self, message_id: int, user_id: int, choice: str) -> bool:
-        """Records the vote. Returns False if this user already voted
-        (the primary key makes it impossible to vote twice)."""
+        """Records the vote. A user has one vote per review, but can switch
+        it. Returns False if they pressed the same choice they already have."""
         result = await self._client.execute(
-            "INSERT OR IGNORE INTO review_votes (message_id, user_id, choice) VALUES (?, ?, ?)",
+            "INSERT INTO review_votes (message_id, user_id, choice) VALUES (?, ?, ?) "
+            "ON CONFLICT(message_id, user_id) DO UPDATE SET choice = excluded.choice "
+            "WHERE review_votes.choice != excluded.choice",
             [message_id, user_id, choice],
         )
         return bool(result.rows_affected)
@@ -286,7 +288,7 @@ class ReviewCommentModal(ui.Modal, title="Review Commend"):
         )
 
         await interaction.response.send_message(
-            f"{emoji('reviews', 'review') or '⭐'} Thank you for your review!", ephemeral=True
+            f"{emoji('reviews', 'review') or '⭐'} 〃 Thank you for your review!", ephemeral=True
         )
 
         cog = interaction.client.get_cog("Reviews")
@@ -472,7 +474,7 @@ class Reviews(commands.Cog):
 
         if custom_id == "review:open":
             await interaction.response.send_message(
-                f"{emoji('reviews', 'review') or '⭐'} Choose a star rating between 1-5",
+                f"{emoji('reviews', 'review') or '⭐'} 〃 Choose a star rating between 1-5",
                 view=RatingSelectView(),
                 ephemeral=True,
             )
@@ -489,7 +491,7 @@ class Reviews(commands.Cog):
 
         if not await reviews_db.vote(message_id, interaction.user.id, choice):
             await interaction.response.send_message(
-                "You have already voted on this review.", ephemeral=True
+                f"You already voted **{choice.title()}** on this review.", ephemeral=True
             )
             return
 
