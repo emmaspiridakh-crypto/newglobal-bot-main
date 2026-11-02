@@ -45,17 +45,17 @@ SUGGESTIONS = {
     "downvote": "<:name:1558850110014881922>",
     "remove": "<:name:1544996104511430736>",
     "total": "<:name:1545579981030162432>",
-    "time": "<:name:1558850274703966288>",
+    "time": "<:name:1566453777131774022>",
     "footer_left": "<:name:1545831836339409048>",
     "suggestion": "<:name:1544996395373559869>",
-    "submitted": "<:name:1547475085588303943>",
+    "submitted": "<:name:1566133385254928504>",
     "bullet": "<:name:1545576267904974859>",
 }
 
 # Not present in the original config — filled with sensible defaults,
 # replace with your own custom emoji IDs if you have them.
 REVIEWS = {
-    "review": "<:name:1557703805041119304>",
+    "review": "<:name:1566447157165166714>",
     "star_filled": "<:name:1566447157165166714>",
     "star_empty": "<:name:1566448350205837472>",
     "user": "<:name:1547475085588303943>",
