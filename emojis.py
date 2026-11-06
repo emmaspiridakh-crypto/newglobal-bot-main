@@ -114,7 +114,30 @@ INFO = {
     "footer_right": "<:name:1545576267904974859>",
 }
 
+# Invites system. Defaults reuse existing server emoji so it works right away;
+# replace any ID with your own custom emoji ('<:name:ID>' or '<a:name:ID>').
+INVITES = {
+    "title": "<:name:1545578059820826745>",
+    "panel_info": "<:name:1566461391878095091>",
+    "my_invites": "<:name:1566133385254928504>",
+    "leaderboard": "<:name:1545576883536793621>",
+    "joins": "<:name:1545363231181381642>",
+    "left": "<:name:1545363295467470908>",
+    "remaining": "<:name:1566133385254928504>",
+    "rank": "<:name:1545578059820826745>",
+    "first": "<:name:1559959698554228827>",
+    "second": "<:name:1559959731634962464>",
+    "third": "<:name:<:3rd:1559959755978571846>>",
+    "bullet": "<:name:1545576267904974859>",
+    "footer": "<:name:1545831836339409048>",
+    "log_join": "<:name:1545363231181381642>",
+    "log_leave": "<:name:1545363295467470908>",
+    "user": "<:name:1566133385254928504>",
+    "inviter": "<:name:1545550175953494187>",
+}
+
 _CATEGORIES = {
+    "invites": INVITES,
     "info": INFO,
     "applications": APPLICATIONS,
     "general": GENERAL,
