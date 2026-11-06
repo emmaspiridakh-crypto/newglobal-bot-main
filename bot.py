@@ -61,6 +61,7 @@ async def main():
         await bot.load_extension("cogs.suggestions")
         await bot.load_extension("cogs.applications")
         await bot.load_extension("cogs.info_panel")
+        await bot.load_extension("cogs.invites")
         await bot.start(config.BOT_TOKEN)
 
 
