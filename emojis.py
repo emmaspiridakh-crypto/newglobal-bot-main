@@ -27,6 +27,7 @@ GENERAL = {
     "support_general": "<:name:1548740498603122788>",
     "support_technical": "<:name:1545577232922312734>",
     "support_billing": "<:name:1545553195760099358>",
+    "support_replacement": "<:name:1548741673109037116>",
     "support_process": "<:name:1545578059820826745>",
     "support_step": "<a:name:1545552914334875800>",
     "support_warning": "<a:name:1545576625574387762>",
