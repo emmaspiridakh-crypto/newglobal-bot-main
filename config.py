@@ -23,7 +23,6 @@ ROLE_MANAGER: int = 1548418196078596158
 CEO_ROLE_ID: int = ROLE_CEO
 OWNERSHIP_ROLE_ID: int = ROLE_OWNERSHIP
 
-CHANNEL_TICKET_PANEL: int = 1548345379810975755
 CHANNEL_LOG: int = 1545572198016745512
 CHANNEL_ORDERS: int = 1545533450541338716
 CHANNEL_ORDERS_LOG: int = 1545533457629974578
@@ -46,6 +45,8 @@ CATEGORY_GENERAL: int = 1548346082767929519
 CATEGORY_TECHNICAL: int = 1548391613150138539
 CATEGORY_BILLING: int = 1548391218596020274
 CATEGORY_MANAGER: int = 1557696643321565184
+# Replacement tickets. Fill in the real category ID (0 = top level).
+CATEGORY_REPLACEMENT: int = 1568399717627330670
 
 TICKET_CATEGORIES: dict[str, int] = {
     "purchase": CATEGORY_PURCHASE,
@@ -55,32 +56,31 @@ TICKET_CATEGORIES: dict[str, int] = {
     "general": CATEGORY_GENERAL,
     "technical": CATEGORY_TECHNICAL,
     "billing": CATEGORY_BILLING,
+    "replacement": CATEGORY_REPLACEMENT,
 }
 
-# URLs used for the ticket panel (banner + thumbnail). Leave as None to skip.
-# The per-ticket panel inside each ticket channel only ever shows a
-# thumbnail (the customer's avatar) — no banner there, by design.
-PANEL_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
-PANEL_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
+# --- Unified Ticket Center panel (/send-ticket-center). Replace the URLs with
+# your own images. None = skip that element. ---
+TICKET_CENTER_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
+TICKET_CENTER_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
+TICKET_CENTER_FOOTER_GIF_URL: str | None = "https://i.imgur.com/6qASJbL.gif"
+# Target of the "Informations" link button on the panel.
+TICKET_CENTER_INFO_URL: str = "https://discord.com/channels/1544741507049721926/1545533424675197051"
 
-# --- Purchase Center panel (/send-panel). Set a URL, or None to skip that element. ---
-PURCHASE_PANEL_BANNER_URL: str | None = "https://i.imgur.com/27wjd53.jpeg"  # <-- put the global_banner_PURCHASE image URL here
-PURCHASE_PANEL_LOGO_URL: str | None = "https://i.imgur.com/VeuJpKh.jpeg"   # <-- put the GLOBAL_LOGO image URL here
-PURCHASE_PANEL_FOOTER_GIF_URL: str | None = "https://i.imgur.com/6qASJbL.gif"
-PURCHASE_PANEL_SHOWCASE_URL = "https://discord.com/channels/1544741507049721926/1548765588225003560"
-PURCHASE_PANEL_TOS_URL = "https://discord.com/channels/1544741507049721926/1545533420128575658"
-PURCHASE_PANEL_PRIVACY_URL = "https://discord.com/channels/1544741507049721926/1545533422347223200"
+# Logo used by the Informations panel.
+PURCHASE_PANEL_LOGO_URL: str | None = "https://i.imgur.com/VeuJpKh.jpeg"
 
 # --- Informations panel (/panel-info). Set a URL, or None to skip that element. ---
 # Banner: replace with the URL of your global_banner image (currently reuses the purchase banner).
 INFO_PANEL_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 INFO_PANEL_LOGO_URL: str | None = PURCHASE_PANEL_LOGO_URL  # GLOBAL_LOGO
 
-# --- Support ticket system (Owner / General Support / Technical / Billing) ---
+# --- Ticket staff roles per ticket kind ---
 # staff_roles is its own list of role IDs — fill it in yourself, it can
 # overlap with or differ from ROLE_DEVELOPER/ROLE_CEO/ROLE_CO_CEO above.
 # (Each support kind now has its own category above in TICKET_CATEGORIES —
-# CATEGORY_OWNER / CATEGORY_GENERAL / CATEGORY_TECHNICAL / CATEGORY_BILLING.)
+# CATEGORY_OWNER / CATEGORY_GENERAL / CATEGORY_TECHNICAL / CATEGORY_BILLING /
+# CATEGORY_REPLACEMENT.)
 TICKET_KIND_STAFF_ROLES: dict[str, list[int]] = {
     "owner": [ROLE_OWNERSHIP],
     "order": [ROLE_OWNERSHIP, ROLE_DEVELOPER],
@@ -89,11 +89,8 @@ TICKET_KIND_STAFF_ROLES: dict[str, list[int]] = {
     "technical": [ROLE_DEVELOPER, ROLE_OWNERSHIP],
     "manager": [ROLE_MANAGER],
     "billing": [ROLE_OWNERSHIP],
+    "replacement": [ROLE_DEVELOPER, ROLE_OWNERSHIP],
 }
-
-SUPPORT_PANEL_CHANNEL: int = 1545576092323287101
-SUPPORT_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
-SUPPORT_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
 
 SUPPORT_LOG_CHANNEL: int = 1545572161014726756
 
