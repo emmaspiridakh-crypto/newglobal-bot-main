@@ -53,7 +53,6 @@ async def main():
 
         await bot.load_extension("cogs.tickets")
         await bot.load_extension("cogs.orders")
-        await bot.load_extension("cogs.support_tickets")
         await bot.load_extension("cogs.bot_status")
         await bot.load_extension("cogs.join_ping")
         await bot.load_extension("cogs.giveaways")
@@ -62,6 +61,7 @@ async def main():
         await bot.load_extension("cogs.applications")
         await bot.load_extension("cogs.info_panel")
         await bot.load_extension("cogs.invites")
+        await bot.load_extension("cogs.ticket_center")
         await bot.start(config.BOT_TOKEN)
 
 
