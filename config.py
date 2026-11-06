@@ -141,6 +141,11 @@ APPLICATION_TYPES: dict[str, dict] = {
     "developer": {"label": "Developer", "questions": APPLICATION_QUESTIONS},
 }
 
+# --- Invites panel (/panel-invites). Banner image URL, or None to skip. ---
+INVITES_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
+# Channel where join/leave invite logs are sent. 0 = use CHANNEL_LOG.
+INVITES_LOG_CHANNEL_ID: int = 1545574430271479848
+
 BOT_TOKEN: str = _env_or("BOT_TOKEN", "PUT_YOUR_BOT_TOKEN_HERE")
 
 TURSO_URL: str = _env_or("TURSO_URL", "libsql://your-database-name.turso.io")
