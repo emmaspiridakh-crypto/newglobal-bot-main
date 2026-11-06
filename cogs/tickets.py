@@ -14,14 +14,13 @@ import config
 from emojis import EMOJI
 from utils.storage import store, TRANSCRIPTS_DIR
 from utils.transcripts import build_transcript
-from cogs._raw_purchase_panel_reference import PurchasePanelView
 
 log = logging.getLogger(__name__)
 
 # Ticket "kinds" that belong to the support-panel system (Owner / General
 # Support / Technical / Billing) use their own staff roles + category,
 # configured separately from the shop's Purchase/Order tickets.
-SUPPORT_KINDS = {"owner", "manager", "general", "technical", "billing"}
+SUPPORT_KINDS = {"owner", "manager", "general", "technical", "billing", "replacement"}
 
 TICKET_TITLES = {
     "purchase": f"{EMOJI['purchase']} Purchase Ticket",
@@ -31,6 +30,7 @@ TICKET_TITLES = {
     "general": f"{EMOJI['support_general']} General Support Ticket",
     "technical": f"{EMOJI['support_technical']} Technical Issue Ticket",
     "billing": f"{EMOJI['support_billing']} Billing Issue Ticket",
+    "replacement": f"{EMOJI['support_replacement']} Replacement Ticket",
 }
 
 MAX_CHANNEL_OVERWRITES = 100
@@ -43,6 +43,7 @@ TICKET_ACCENT_COLOURS = {
     "general": discord.Colour.blue(),
     "technical": discord.Colour.blue(),
     "billing": discord.Colour.blue(),
+    "replacement": discord.Colour.blue(),
 }
 
 
@@ -84,6 +85,41 @@ def notice_view(text: str, colour: discord.Colour) -> discord.ui.LayoutView:
     """Small Components V2 panel with a single line of text."""
     view = discord.ui.LayoutView(timeout=None)
     view.add_item(discord.ui.Container(discord.ui.TextDisplay(text), accent_colour=colour))
+    return view
+
+
+def build_ticket_opened_view(channel: discord.TextChannel, kind: str) -> discord.ui.LayoutView:
+    """Ephemeral "Your ticket has opened" panel (only the opener sees it)
+    with a button that jumps straight to the ticket."""
+    small = discord.SeparatorSpacing.small
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(
+        discord.ui.Container(
+            discord.ui.Separator(visible=True, spacing=small),
+            discord.ui.TextDisplay("# <:name:1545553071872933898> 〃__***Your Ticket Has Opened.***__ "),
+            discord.ui.Separator(visible=True, spacing=small),
+            discord.ui.TextDisplay(" You can go to your ticket by clicking the button below "),
+            discord.ui.Separator(visible=True, spacing=small),
+            discord.ui.ActionRow(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.link,
+                    label="〃 My ticket 〃",
+                    emoji=discord.PartialEmoji(name="name", id=1545553071872933898),
+                    url=channel.jump_url,
+                ),
+            ),
+            discord.ui.Separator(visible=True, spacing=small),
+            discord.ui.TextDisplay(
+                "> -  <:name:1566128213858459848> Please be respectful and don't spam in your ticket. We will be with you shortly."
+            ),
+            discord.ui.Separator(visible=True, spacing=small),
+            discord.ui.TextDisplay(
+                "> <:name:1545831836339409048> 〃 **GlobalBots™, All Rights Reserved ©** <:name:1545576267904974859> **Ticket  Center** "
+            ),
+            discord.ui.Separator(visible=True, spacing=small),
+            accent_colour=0x006FFF,
+        ),
+    )
     return view
 
 
@@ -724,73 +760,6 @@ class RemoveMemberView(discord.ui.LayoutView):
         )
 
 
-# --------------------------------------------------------------------------
-# Panels (Components V2)
-# --------------------------------------------------------------------------
-
-class TicketPanelView(discord.ui.LayoutView):
-    """The panel posted once in the ticket panel channel — Purchase / Order."""
-
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-
-        purchase_btn = discord.ui.Button(
-            label="Purchase",
-            style=discord.ButtonStyle.success,
-            emoji=EMOJI["purchase"],
-            custom_id="ticket:open:purchase",
-        )
-        purchase_btn.callback = self.on_purchase
-
-        order_btn = discord.ui.Button(
-            label="Order Support",
-            style=discord.ButtonStyle.primary,
-            emoji=EMOJI["order"],
-            custom_id="ticket:open:order",
-        )
-        order_btn.callback = self.on_order
-
-        children = []
-        if config.PANEL_BANNER_URL:
-            children.append(
-                discord.ui.MediaGallery(
-                    discord.MediaGalleryItem(media=config.PANEL_BANNER_URL)
-                )
-            )
-
-        header_text = discord.ui.TextDisplay(f"{EMOJI['bot']} **Bot Shop — Ticket Center**")
-        body_text = discord.ui.TextDisplay(
-            "Need a bot, or have a question about an order?\n"
-            "Pick an option below and we'll take care of you."
-        )
-
-        if config.PANEL_THUMBNAIL_URL:
-            children.append(
-                discord.ui.Section(
-                    header_text,
-                    body_text,
-                    accessory=discord.ui.Thumbnail(media=config.PANEL_THUMBNAIL_URL),
-                )
-            )
-        else:
-            children.append(header_text)
-            children.append(body_text)
-
-        children.append(discord.ui.Separator())
-        children.append(discord.ui.ActionRow(purchase_btn, order_btn))
-
-        container = discord.ui.Container(*children, accent_colour=discord.Colour(0x3D91FF))
-        self.add_item(container)
-
-    async def on_purchase(self, interaction: discord.Interaction) -> None:
-        from cogs.purchase_order_flow import start_purchase_flow
-        await start_purchase_flow(interaction)
-
-    async def on_order(self, interaction: discord.Interaction) -> None:
-        from cogs.purchase_order_flow import start_order_flow
-        await start_order_flow(interaction)
-
-
 def format_ticket_details(kind: str, fields: dict[str, str] | None) -> str:
     if not fields:
         return "Please describe what you need below — a member of staff will be with you shortly."
@@ -919,8 +888,12 @@ async def create_ticket_channel(
             "This can only be used inside the server.", ephemeral=True
         )
 
+    # Ephemeral => only the person who pressed the button sees it. It is a
+    # Components V2 panel from the start so it can later be edited into the
+    # "ticket opened" panel (a plain message can't be edited into a V2 one).
     await interaction.response.send_message(
-        "Creating your ticket...", ephemeral=True
+        view=notice_view("Creating your ticket...", discord.Colour.blurple()),
+        ephemeral=True,
     )
 
     channel: discord.TextChannel | None = None
@@ -971,13 +944,11 @@ async def create_ticket_channel(
         else:
             reason = f"{type(exc).__name__}: {exc}"
         await interaction.edit_original_response(
-            content=f"Could not create your ticket. {reason}"
+            view=notice_view(f"Could not create your ticket. {reason}", discord.Colour.red())
         )
         return
 
-    await interaction.edit_original_response(
-        content=f"Your ticket has been created: {channel.mention}"
-    )
+    await interaction.edit_original_response(view=build_ticket_opened_view(channel, kind))
 
     try:
         leaks = audit_ticket_visibility(channel, customer, kind)
@@ -1277,17 +1248,10 @@ class Tickets(commands.Cog):
 
         await interaction.followup.send("\n".join(lines)[:1990], ephemeral=True)
 
-    @app_commands.command(name="send-panel", description="Post the ticket panel in this channel")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def send_panel(self, interaction: discord.Interaction) -> None:
-        await interaction.channel.send(view=PurchasePanelView())
-        await interaction.response.send_message("Panel sent.", ephemeral=True)
-
 
 async def setup(bot: commands.Bot) -> None:
     for item_cls in (
         ClaimButton, PingButton, CloseButton, TranscriptButton, ModifyButton, DMTranscriptButton
     ):
         bot.add_dynamic_items(item_cls)
-    bot.add_view(PurchasePanelView())
     await bot.add_cog(Tickets(bot))
