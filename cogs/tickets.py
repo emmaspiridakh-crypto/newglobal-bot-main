@@ -110,7 +110,7 @@ def build_ticket_opened_view(channel: discord.TextChannel, kind: str) -> discord
             ),
             discord.ui.Separator(visible=True, spacing=small),
             discord.ui.TextDisplay(
-                "> -  <:name:1566128213858459848> Please be respectful and don't spam in your ticket. We will be with you shortly."
+                "> -  <a:name:1545552914334875800> Please be respectful and don't spam in your ticket. We will be with you shortly."
             ),
             discord.ui.Separator(visible=True, spacing=small),
             discord.ui.TextDisplay(
