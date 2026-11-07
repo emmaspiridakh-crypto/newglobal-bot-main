@@ -79,54 +79,63 @@ def _staff_ids() -> list[int]:
 # --------------------------------------------------------------------------
 
 def build_panel_view() -> ui.LayoutView:
-    def e(key: str) -> str:
-        return emoji("applications", key)
+    small = discord.SeparatorSpacing.small
 
-    container = ui.Container(accent_colour=APP_ACCENT)
+    def sep() -> ui.Separator:
+        return ui.Separator(visible=True, spacing=small)
+
+    # Thumbnail next to the intro text. APPLICATIONS_LOGO_URL in config.py,
+    # falling back to the shared GlobalBots logo.
+    logo_url = getattr(config, "APPLICATIONS_LOGO_URL", None) or getattr(config, "PURCHASE_PANEL_LOGO_URL", None)
+
+    intro = ui.TextDisplay(
+        "<:name:1545576267904974859> If you want to become a member of our development team, click the button "
+        "below to __answer a few questions__ about your work. __We will review your application and get in "
+        "touch with you regarding further information and the results.__\n"
+    )
+
+    children: list = []
     if config.APPLICATIONS_BANNER_URL:
-        container.add_item(ui.MediaGallery(discord.MediaGalleryItem(media=config.APPLICATIONS_BANNER_URL)))
-        add_separator(container)
-    add_text(container, f"# {e('title')}** 〃 __Developer Application__**")
-    add_separator(container)
-    add_text(
-        container,
-        f"{e('info')} If you want to become a member of our development team, click the button below to "
-        "__answer a few questions__ about your work. __We will review your application and get in touch "
-        "with you regarding further information and the results.__",
-    )
-    add_separator(container)
-    add_text(container, f"### {e('process')}** 〃 __APPLICATION PROCESS__**")
-    add_text(
-        container,
-        f"> {e('step')} Click the **\"Apply\"** button and go to the channel that opens.\n"
-        f"> {e('step')} Inside the channel, press the **\"Start\"** button and answer the questions. "
-        "Make sure to answer honestly.\n"
-        f"> {e('step')} You will be asked to send a photo of something you have created, or a link to a "
-        "server where your work is hosted.\n"
-        f"> {e('step')} Once you have answered all the questions, click the **\"Sent\"** button, and your "
-        "application will be sent to us for review.",
-    )
-    add_separator(container)
-    add_text(
-        container,
-        f"> **{e('disclaimer')} 〃 __Disclaimer:__**\n"
-        "> We might have a few more questions, so keep an eye on the application channel.",
-    )
-    add_separator(container)
-    add_action_row(
-        container,
-        ui.Button(
-            style=discord.ButtonStyle.secondary,
-            label="Apply",
-            emoji=_btn_emoji("apply"),
-            custom_id="app_apply:developer",
+        children += [ui.MediaGallery(discord.MediaGalleryItem(config.APPLICATIONS_BANNER_URL)), sep()]
+    children += [
+        ui.TextDisplay("# <:name:1563918477746503830> 〃 ***__GlobalBots™ - Developer Application__***"),
+        sep(),
+        ui.Section(intro, accessory=ui.Thumbnail(logo_url)) if logo_url else intro,
+        sep(),
+        ui.TextDisplay("### <:name:1545579981030162432> 〃 **__APPLICATION PROCESS__**\n"),
+        ui.TextDisplay(
+            "> - <a:name:1545552914334875800> Click the **\"Apply\"** button and go to the channel that opens.\n"
+            "> - <a:name:1545552914334875800> Inside the channel, press the **\"Start\"** button and answer the "
+            "questions. Make sure to answer honestly.\n"
+            "> - <a:name:1545552914334875800> You will be asked to send a photo of something you have created, or "
+            "a link to a server where your work is hosted.\n"
+            "> - <a:name:1545552914334875800> Once you have answered all the questions, click the **\"Sent\"** "
+            "button, and your application will be sent to us for review."
         ),
-    )
-    add_separator(container)
-    add_text(container, f"> -# {e('footer')} 〃 GlobalBots - Application System")
+        sep(),
+        ui.TextDisplay(
+            "### **<:name:1563933758824914965> 〃 __Disclaimer:__**\n"
+            "> We might have a few more questions, so keep an eye on the application channel."
+        ),
+        sep(),
+        ui.ActionRow(
+            ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="〃 Apply",
+                emoji=discord.PartialEmoji(name="name", id=1563918477746503830),
+                custom_id="app_apply:developer",  # unchanged: the system handles it
+            ),
+        ),
+        sep(),
+        ui.TextDisplay(
+            "> -# <:name:1545831836339409048> 〃 ***GlobalBots™, All Rights Reserved © "
+            "<:name:1545576267904974859> Application System***"
+        ),
+        sep(),
+    ]
 
     view = ui.LayoutView(timeout=None)
-    view.add_item(container)
+    view.add_item(ui.Container(*children, accent_colour=0x0084FF))
     return view
 
 
