@@ -98,6 +98,7 @@ SUPPORT_LOG_CHANNEL: int = 1545572161014726756
 GIVEAWAY_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 REVIEWS_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
 REVIEWS_LOG_BANNER__URL: str | None = "https://i.imgur.com/TEtihGW.jpeg"
+TICKET_PANEL_BANNER_URL: str | None = "https://i.imgur.com/gFR8LeA.jpeg"
 
 # --- Developer applications ---
 # Category where each applicant's private application channel is created
