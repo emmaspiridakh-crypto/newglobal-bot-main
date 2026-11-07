@@ -85,13 +85,13 @@ class TicketCenterView(ui.LayoutView):
             children += [ui.MediaGallery(discord.MediaGalleryItem(config.TICKET_CENTER_BANNER_URL)), sep()]
 
         children += [
-            ui.TextDisplay("# <:name:1565041266079698955> 〃 __**GlobalBots™ - Ticket Center**__"),
+            ui.TextDisplay("# <:name:1565041266079698955> 〃 __***GlobalBots™ - Ticket Center***__"),
             sep(),
         ]
         welcome = ui.TextDisplay(
             "***__Welcome to our Ticket Center.__***\n"
             "\n"
-            "> <:name:1566128213858459848> Before you do anything we suggest to learn about our Terms of Service and Privacy."
+            "> <a:name:1545552914334875800> Before you do anything we suggest to learn about our Terms of Service and our Privacy."
         )
         if config.TICKET_CENTER_THUMBNAIL_URL:
             children.append(ui.Section(welcome, accessory=ui.Thumbnail(config.TICKET_CENTER_THUMBNAIL_URL)))
@@ -129,6 +129,7 @@ class TicketCenterView(ui.LayoutView):
             sep(),
             ui.ActionRow(purchase_select),
             sep(),
+            sep(False),
             ui.TextDisplay("## <:name:1545577232922312734> 〃 ***__Issues/Replacement__*** "),
             ui.TextDisplay(
                 "*If you want a product replacement, something goes wrong with the bot or the payment. * \n"
@@ -139,12 +140,13 @@ class TicketCenterView(ui.LayoutView):
             sep(),
             ui.ActionRow(issues_select),
             sep(),
+            sep(False),
             ui.TextDisplay("### <:name:1545578059820826745> 〃 __**TICKET PROCESS**__   "),
             ui.TextDisplay(
-                "> <:name:1566128213858459848> Choose the category that best matches your request.\n"
-                "> <:name:1566128213858459848> Please provide a proper description of your issue or request.\n"
-                "> <:name:1566128213858459848> Our Team will review your ticket and assist you as soon as possible.\n"
-                "> <:name:1566128213858459848> Please don't open an owner ticket without an important reason. This action may result in a warning "
+                "> <a:name:1545552914334875800> Choose the category that best matches your request.\n"
+                "> <a:name:1545552914334875800> Please provide a proper description of your issue or request.\n"
+                "> <a:name:1545552914334875800> Our Team will review your ticket and assist you as soon as possible.\n"
+                "> <a:name:1545552914334875800> Please don't open an owner ticket without an important reason. This action may result in a warning "
             ),
             sep(),
         ]
@@ -152,7 +154,7 @@ class TicketCenterView(ui.LayoutView):
             children += [ui.MediaGallery(discord.MediaGalleryItem(config.TICKET_CENTER_FOOTER_GIF_URL)), sep()]
         children += [
             ui.TextDisplay(
-                "<:name:1545831836339409048> 〃 **GlobalBots™, All Rights Reserved ©** "
+                " <:name:1545831836339409048> 〃 **GlobalBots™, All Rights Reserved ©** "
                 "<:name:1545576267904974859> **Ticket  Center** "
             ),
             sep(),
