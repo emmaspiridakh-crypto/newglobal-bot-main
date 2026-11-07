@@ -108,7 +108,6 @@ class TicketCenterView(ui.LayoutView):
                 ),
             ),
             sep(),
-            sep(False),
             ui.TextDisplay("## <:name:1548745357717012501> 〃 __***Support Center***__ "),
             ui.TextDisplay(
                 "*If you need any help or have any questions, choose the appropriate category*. \n"
@@ -119,7 +118,6 @@ class TicketCenterView(ui.LayoutView):
             sep(),
             ui.ActionRow(support_select),
             sep(),
-            sep(False),
             ui.TextDisplay("## <:name:1548349993830850713> 〃 __***Purchase Center***__"),
             ui.TextDisplay(
                 "*To purchase a custom bot or to order an existing bot.*\n"
@@ -129,7 +127,6 @@ class TicketCenterView(ui.LayoutView):
             sep(),
             ui.ActionRow(purchase_select),
             sep(),
-            sep(False),
             ui.TextDisplay("## <:name:1545577232922312734> 〃 ***__Issues/Replacement__*** "),
             ui.TextDisplay(
                 "*If you want a product replacement, something goes wrong with the bot or the payment. * \n"
@@ -140,7 +137,6 @@ class TicketCenterView(ui.LayoutView):
             sep(),
             ui.ActionRow(issues_select),
             sep(),
-            sep(False),
             ui.TextDisplay("### <:name:1545578059820826745> 〃 __**TICKET PROCESS**__   "),
             ui.TextDisplay(
                 "> <a:name:1545552914334875800> Choose the category that best matches your request.\n"
