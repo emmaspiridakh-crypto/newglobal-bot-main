@@ -1,44 +1,25 @@
-# Each value can be a plain unicode emoji, a static custom emoji
-# '<:name:123...>', or an animated one '<a:name:123...>'. Get the exact
-# string by typing \:youremojiname: in Discord (backslash before the
-# colon) and copying what it sends.
-
 GENERAL = {
     "purchase": "<:name:1548349993830850713>",
     "order": "<:name:1545578583332757665>",
-    "close": "<:name:1566453823189418146>",
-    "claim": "<:name:1545577232922312734>",
+    "close": "<:name:1566453862343385289>",
+    "claim": "<:name:1566450319351611504>",
     "ping": "<:name:1566453919842836520>",
     "transcript": "<:name:1545576883536793621>",
     "bot": "<:name:1545576824380067860>",
     "budget": "<:name:1548349637918728232>",
     "payment": "<:name:1545553195760099358>",
-    "reason": "<:name:1566461391878095091>",
     "log_open": "<a:name:1544996079626362920>",
-    "log_close": "<a:name:1544996055462977556>",
     "place_order": "<a:name:1545552914334875800>",
-    "order_accept": "<:name:1544994894370578474>",
+    "order_accept": "<:name:1545577943953186816>",
     "order_done": "<:name:1544994894370578474>",
-    "order_cancel": "<:name:1545364084499808256>",
+    "order_cancel": "<:name:1566453862343385289>",
     "order_pending": "<a:name:1548350905802424441>",
-    "support_title": "<:name:1545553071872933898>",
-    "support_owner": "<:name:1545576744956727306>",
-    "support_manager": "<:name:1557694211602513950>",
-    "support_general": "<:name:1548740498603122788>",
-    "support_technical": "<:name:1545577232922312734>",
-    "support_billing": "<:name:1545553195760099358>",
-    "support_replacement": "<:name:1548741673109037116>",
-    "support_process": "<:name:1545578059820826745>",
-    "support_step": "<a:name:1545552914334875800>",
-    "support_warning": "<a:name:1545576625574387762>",
     "check": "<:name:1544994894370578474>",
-    "cancel": "<:name:1545364084499808256>",
+    "cancel": "<:name:1544994871369273424>",
     "send": "<a:name:1545552914334875800>",
-    "plan": "<:name:1548349637918728232>",
-    "server": "<:name:1545576824380067860>",
-    # Modify button on the ticket panel. Uses the same emoji as the giveaway
-    # "edit" button for now — replace the ID with your own custom emoji.
-    "modify": "<:name:1545577232922312734>",
+    "plan": "<:name:1566453662937649182>",
+    "server": "<:name:1545579981030162432>",
+    "modify": "<:name:1566127862657060894>",
 }
 
 SUGGESTIONS = {
@@ -46,68 +27,51 @@ SUGGESTIONS = {
     "downvote": "<:name:1558850110014881922>",
     "remove": "<:name:1544996104511430736>",
     "total": "<:name:1545579981030162432>",
-    "time": "<:name:1566453777131774022>",
+    "time": "<:name:1566453740343394456>",
     "footer_left": "<:name:1545831836339409048>",
-    "suggestion": "<:name:1544996395373559869>",
+    "suggestion": "<:name:1566453702900973578>",
     "submitted": "<:name:1566133385254928504>",
     "bullet": "<:name:1545576267904974859>",
 }
 
-# Not present in the original config — filled with sensible defaults,
-# replace with your own custom emoji IDs if you have them.
 REVIEWS = {
     "review": "<:name:1566447157165166714>",
     "star_filled": "<:name:1566447157165166714>",
     "star_empty": "<:name:1566448350205837472>",
-    "user": "<:name:1547475085588303943>",
-    "comment": "<:name:1544996395373559869>",
-    "date": "<:name:1547464754593796106>",
-    "bullet": "<:name:1545576267904974859>",
-    "make_review": "<:name:1557703805041119304>",
 }
 
 GIVEAWAY = {
-    "giveaway": "<:name:1547458529089290290>",
+    "giveaway": "<:name:1566492002965528587>",
     "join": "<:name:1545363231181381642>",
     "leave": "<:name:1545363295467470908>",
-    "info": "<:name:1545579981030162432>",
-    "edit": "<:name:1545576993448529951>",
-    "reroll": "<a:name:1548350905802424441>",
-    "end": "<a:name:1544996055462977556>",
-    "participants": "<:name:1547475085588303943>",
+    "info": "<:name:1566461429903790241>",
+    "edit": "<:name:1566127862657060894>",
+    "reroll": "<:name:1548741673109037116>",
+    "end": "<:name:1566453862343385289>",
+    "participants": "<:name:1566133385254928504>",
     "winner": "<:name:1547466980506738779>",
-    "prize": "<:name:1545578059820826745>",
+    "prize": "<:name:1547458529089290290>",
     "host": "<:name:1545576744956727306>",
-    "winners_count": "<:name:1547460941057101834>",
+    "winners_count": "<:name:1557694211602513950>",
     "entries": "<:name:1545363231181381642>",
-    "time": "<:name:1547464754593796106>",
-    "id": "<:name:1548353089927512135>",
-    "role": "<:name:1545550175953494187>",
+    "time": "<:name:1566492002965528587>",
+    "role": "<:name:1566133385254928504>",
     "add_member": "<:name:1544996128809029702>",
 }
 
 APPLICATIONS = {
-    # Developer Application panel (from the DWEEB design)
-    "title": "<:name:1563918477746503830>",
-    "info": "<:name:1545576267904974859>",
-    "process": "<:name:1545579981030162432>",
-    "step": "<a:name:1545552914334875800>",
-    "disclaimer": "<:name:1563933758824914965>",
-    "apply": "<:name:1563918477746503830>",
-    "footer": "<:name:1545831836339409048>",
-    # Buttons — reusing existing emoji, replace the IDs with your own if you want.
     "yes": "<:name:1544994894370578474>",
-    "no": "<:name:1545364084499808256>",
-    "send": "<a:name:1545552914334875800>",
-    "accept": "<:name:1544994894370578474>",
-    "deny": "<:name:1545364084499808256>",
-    "close": "<:name:1545364084499808256>",
-    "ping": "<:name:1545365144538718260>",
+    "no": "<:name:1544994871369273424>",
+    "send": "<a:name:1545577943953186816>",
+    "accept": "<:name:1566450319351611504>",
+    "deny": "<:name:1566450266469961778>",
+    "close": "<:name:1566453823189418146>",
+    "ping": "<:name:1566453919842836520>",
 }
 
 INFO = {
     "title": "<:name:1566461391878095091>",
-    "note": "<:name:1566128213858459848>",
+    "note": "<a:name:1545552914334875800>",
     "tos": "<:name:1566484047943704656>",
     "privacy": "<:name:1566484521073905824>",
     "faq": "<:name:1548740498603122788>",
@@ -115,25 +79,23 @@ INFO = {
     "footer_right": "<:name:1545576267904974859>",
 }
 
-# Invites system. Defaults reuse existing server emoji so it works right away;
-# replace any ID with your own custom emoji ('<:name:ID>' or '<a:name:ID>').
 INVITES = {
-    "title": "<:name:1545578059820826745>",
+    "title": "<a:name:1545548139203919934>",
     "panel_info": "<:name:1566461391878095091>",
     "my_invites": "<:name:1566133385254928504>",
-    "leaderboard": "<:name:1545576883536793621>",
+    "leaderboard": "<:name:1568643002715344907>",
     "joins": "<:name:1545363231181381642>",
     "left": "<:name:1545363295467470908>",
-    "remaining": "<:name:1566133385254928504>",
-    "rank": "<:name:1545578059820826745>",
+    "remaining": "<:name:1568643933452632214>",
+    "rank": "<:name:1557694211602513950>",
     "first": "<:name:1559959698554228827>",
     "second": "<:name:1559959731634962464>",
-    "third": "<:name:<:3rd:1559959755978571846>>",
+    "third": "<:name:1559959755978571846>",
     "bullet": "<:name:1545576267904974859>",
     "footer": "<:name:1545831836339409048>",
     "log_join": "<:name:1545363231181381642>",
     "log_leave": "<:name:1545363295467470908>",
-    "user": "<:name:1566133385254928504>",
+    "user": "<:name:1548353089927512135>",
     "inviter": "<:name:1545550175953494187>",
 }
 
@@ -147,13 +109,8 @@ _CATEGORIES = {
     "giveaway": GIVEAWAY,
 }
 
-# Flat dict of the "general" category, kept for cogs that still do
-# EMOJI["some_key"] directly (tickets.py, orders.py, support_tickets.py).
 EMOJI: dict = GENERAL
 
 
 def emoji(category: str, key: str) -> str:
-    """Looks up the given category/key. Returns '' if missing instead of
-    raising, so an unset emoji just falls back to whatever default the
-    caller passes (e.g. `emoji("giveaway", "join") or "🎉"`)."""
     return _CATEGORIES.get(category, {}).get(key, "")
