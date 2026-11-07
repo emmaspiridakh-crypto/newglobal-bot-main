@@ -957,7 +957,7 @@ class CloseReasonModal(discord.ui.Modal, title="Close Ticket"):
         placeholder="e.g. Order completed, Resolved, Customer inactive...",
         style=discord.TextStyle.paragraph,
         max_length=500,
-        required=False,
+        required=True,
     )
 
     def __init__(self, channel_id: int):
@@ -996,7 +996,7 @@ async def create_ticket_channel(
     try:
         category_id = config.TICKET_CATEGORIES.get(kind, config.TICKET_CATEGORY)
         category = guild.get_channel(category_id)
-        channel_name = f"{safe_name(customer.display_name)}-{kind}"
+        channel_name = f"gl-{kind}-{safe_name(customer.display_name)}"[:100]
 
         channel = await guild.create_text_channel(
             name=channel_name,
@@ -1105,11 +1105,13 @@ async def close_ticket(interaction: discord.Interaction, channel_id: int, reason
 
         if customer is not None and transcript_path is not None:
             try:
+                dm_view = build_transcript_view(
+                    channel=channel, kind=kind, ticket=ticket, closed_by=interaction.user,
+                    reason=reason, closed_at=closed_at, filename=transcript_path.name,
+                    button=DMTranscriptButton(channel.id),
+                )
                 await customer.send(
-                    view=build_close_dm_view(
-                        guild, channel, customer, interaction.user, reason, closed_at,
-                        transcript_path.name,
-                    ),
+                    view=dm_view,
                     file=discord.File(transcript_path, filename=transcript_path.name),
                 )
             except Exception:
@@ -1119,7 +1121,8 @@ async def close_ticket(interaction: discord.Interaction, channel_id: int, reason
         if transcript_path is not None:
             try:
                 await log_ticket_close(
-                    guild, channel, customer, kind, interaction.user, reason, transcript_path
+                    guild, channel, customer, kind, interaction.user, reason, transcript_path,
+                    ticket=ticket, closed_at=closed_at,
                 )
             except Exception:
                 log.exception("Failed to log ticket close for channel %s", channel_id)
@@ -1136,40 +1139,108 @@ async def close_ticket(interaction: discord.Interaction, channel_id: int, reason
             log.exception("Failed to delete ticket channel %s", channel_id)
 
 
-def build_close_dm_view(
-    guild: discord.Guild,
+def _opened_ts(ticket: dict | None) -> int | None:
+    raw = (ticket or {}).get("opened_at")
+    if not raw:
+        return None
+    try:
+        opened = dt.datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if opened.tzinfo is None:  # stored with utcnow()
+        opened = opened.replace(tzinfo=dt.timezone.utc)
+    return int(opened.timestamp())
+
+
+def build_transcript_view(
+    *,
     channel: discord.abc.GuildChannel,
-    customer: discord.Member,
-    closed_by: discord.Member,
+    kind: str,
+    ticket: dict | None,
+    closed_by: discord.abc.User,
     reason: str,
     closed_at: dt.datetime,
     filename: str,
+    button: discord.ui.DynamicItem,
 ) -> discord.ui.LayoutView:
-    """'Your ticket has been closed' DM: who closed it, the reason and when,
-    then the transcript file with a button (no emoji) underneath."""
-    ts = int(closed_at.timestamp())
-    thumbnail_url = guild.icon.url if guild.icon else customer.display_avatar.url
+    """'Ticket Transcript' panel for every ticket kind. Used for the
+    customer's DM and for the staff log channel. The details list depends on
+    the kind; "Claimed By" is only listed when somebody claimed the ticket."""
+    small = discord.SeparatorSpacing.small
 
-    view = discord.ui.LayoutView(timeout=None)
-    view.add_item(
-        discord.ui.Container(
-            discord.ui.Section(
-                discord.ui.TextDisplay("## Your ticket has been closed"),
-                discord.ui.TextDisplay(
-                    f"**Ticket:** #{channel.name}\n"
-                    f"**Closed by:** {closed_by.mention} ({closed_by})\n"
-                    f"**Reason:** {reason}\n"
-                    f"**Time:** <t:{ts}:F> (<t:{ts}:R>)"
-                ),
-                accessory=discord.ui.Thumbnail(media=thumbnail_url),
-            ),
-            discord.ui.Separator(),
-            discord.ui.TextDisplay("**Transcript**"),
-            discord.ui.File(f"attachment://{filename}"),
-            discord.ui.ActionRow(DMTranscriptButton(channel.id)),
-            accent_colour=discord.Colour.red(),
-        )
+    def sep(visible: bool = True) -> discord.ui.Separator:
+        return discord.ui.Separator(visible=visible, spacing=small)
+
+    dot = "<:name:1566128213858459848>"
+    opened = _opened_ts(ticket)
+    closed = int(closed_at.timestamp())
+    claimed_by = (ticket or {}).get("claimed_by")
+
+    fields = (ticket or {}).get("fields") or {}
+    lines = [f"> {dot} **Ticket Type:** {channel.name}"]
+    if kind == "purchase":
+        lines += [
+            f"> {dot} **Product:** {fields.get('bot_type') or '-'}",
+            f"> {dot} **Payment Method:** {fields.get('payment_method') or '-'}",
+            f"> {dot} **Status:** {fields.get('plan') or '-'}",
+        ]
+    elif kind == "order":
+        lines += [
+            f"> {dot} **Server:** {fields.get('server') or '-'}",
+            f"> {dot} **Budget:** {fields.get('budget') or '-'}",
+            f"> {dot} **Payment Method:** {fields.get('payment_method') or '-'}",
+            f"> {dot} **Product Description:** {(fields.get('description') or '-').strip() or '-'}",
+        ]
+    if claimed_by:
+        lines.append(f"> {dot} **Claimed By:** <@{claimed_by}>")
+    lines += [
+        f"> {dot} **Closed By:** {closed_by.mention}",
+        f"> {dot} **Time It Opened:** {f'<t:{opened}:F>' if opened else '-'}",
+        f"> {dot} **Time It Closed:** <t:{closed}:F>",
+        f"> {dot} **Reason:** {reason}",
+    ]
+
+    button.item.label = "〃 Transcript "
+    button.item.style = discord.ButtonStyle.secondary
+    button.item.emoji = discord.PartialEmoji(name="name", id=1545576883536793621)
+
+    banner = getattr(config, "TRANSCRIPT_BANNER_URL", None) or getattr(config, "INFO_PANEL_BANNER_URL", None)
+    logo = getattr(config, "TRANSCRIPT_LOGO_URL", None) or getattr(config, "PURCHASE_PANEL_LOGO_URL", None)
+
+    intro = discord.ui.TextDisplay(
+        f"> {dot} *Your private ticket has closed. You can see the details and the ticket transcript below.* "
     )
+    children: list = [sep()]
+    if banner:
+        children += [discord.ui.MediaGallery(discord.MediaGalleryItem(banner)), sep()]
+    children += [
+        discord.ui.TextDisplay("## <:name:1545831836339409048> 〃 **__GlobalBots™ - Ticket Transcript__** "),
+        sep(),
+        discord.ui.Section(intro, accessory=discord.ui.Thumbnail(logo)) if logo else intro,
+        sep(),
+        sep(False),
+        discord.ui.TextDisplay("## <:name:1545553071872933898> 〃 ***__Ticket Details__*** "),
+        sep(),
+        discord.ui.TextDisplay("\n".join(lines)),
+        sep(),
+        sep(False),
+        discord.ui.TextDisplay("## <:name:1545576883536793621> 〃 ***__Transcript__*** "),
+        sep(),
+        discord.ui.TextDisplay(
+            f"> {dot} *Below you can see the transcript and download it if you want.* "
+        ),
+        discord.ui.ActionRow(button),
+        sep(),
+        discord.ui.File(f"attachment://{filename}"),
+        sep(),
+        discord.ui.TextDisplay(
+            "<:name:1545831836339409048> 〃 **GlobalBots™, All Rights Reserved © "
+            "<:Dot:1545576267904974859> Ticket Center **"
+        ),
+        sep(),
+    ]
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(discord.ui.Container(*children, accent_colour=0x0090FF))
     return view
 
 
@@ -1211,39 +1282,18 @@ async def log_ticket_close(
     closed_by: discord.abc.User,
     reason: str,
     transcript_path,
+    ticket: dict | None = None,
+    closed_at: dt.datetime | None = None,
 ) -> None:
     log_channel = await get_log_channel(guild, kind)
     if log_channel is None:
         return
 
-    view = discord.ui.LayoutView(timeout=None)
-
-    texts = [
-        discord.ui.TextDisplay(
-            f"{EMOJI['log_close']} **Ticket Closed**\n"
-            f"**Customer:** {customer.mention if customer else 'Unknown'}\n"
-            f"**Type:** {kind.title()} — **Channel:** #{channel.name}"
-        ),
-        discord.ui.TextDisplay(
-            f"**Closed by:** {closed_by.mention}\n**Reason:** {reason}"
-        ),
-    ]
-    thumbnail_url = (
-        customer.display_avatar.url if customer else guild.icon.url if guild.icon else None
+    view = build_transcript_view(
+        channel=channel, kind=kind, ticket=ticket, closed_by=closed_by, reason=reason,
+        closed_at=closed_at or dt.datetime.now(dt.timezone.utc),
+        filename=transcript_path.name, button=TranscriptButton(channel.id),
     )
-    if thumbnail_url:
-        content_items = [discord.ui.Section(*texts, accessory=discord.ui.Thumbnail(media=thumbnail_url))]
-    else:
-        content_items = texts
-
-    action_row = discord.ui.ActionRow(TranscriptButton(channel.id))
-    container = discord.ui.Container(
-        *content_items,
-        discord.ui.File(f"attachment://{transcript_path.name}"),
-        action_row,
-        accent_colour=discord.Colour.red(),
-    )
-    view.add_item(container)
     await log_channel.send(view=view, file=discord.File(transcript_path, filename=transcript_path.name))
 
 
