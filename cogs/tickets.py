@@ -22,30 +22,7 @@ log = logging.getLogger(__name__)
 # configured separately from the shop's Purchase/Order tickets.
 SUPPORT_KINDS = {"owner", "manager", "general", "technical", "billing", "replacement"}
 
-TICKET_TITLES = {
-    "purchase": f"{EMOJI['purchase']} Purchase Ticket",
-    "order": f"{EMOJI['order']} Order Ticket",
-    "owner": f"{EMOJI['support_owner']} Contact Owner Ticket",
-    "manager": f"{EMOJI['support_manager']} Talk To Management Team",
-    "general": f"{EMOJI['support_general']} General Support Ticket",
-    "technical": f"{EMOJI['support_technical']} Technical Issue Ticket",
-    "billing": f"{EMOJI['support_billing']} Billing Issue Ticket",
-    "replacement": f"{EMOJI['support_replacement']} Replacement Ticket",
-}
-
 MAX_CHANNEL_OVERWRITES = 100
-
-TICKET_ACCENT_COLOURS = {
-    "purchase": discord.Colour.blue(),
-    "order": discord.Colour.blue(),
-    "owner": discord.Color.blue(),
-    "manager": discord.Color.blue(),
-    "general": discord.Colour.blue(),
-    "technical": discord.Colour.blue(),
-    "billing": discord.Colour.blue(),
-    "replacement": discord.Colour.blue(),
-}
-
 
 # --------------------------------------------------------------------------
 # Helpers
@@ -110,7 +87,7 @@ def build_ticket_opened_view(channel: discord.TextChannel, kind: str) -> discord
             ),
             discord.ui.Separator(visible=True, spacing=small),
             discord.ui.TextDisplay(
-                "> -  <a:name:1545552914334875800> Please be respectful and don't spam in your ticket. We will be with you shortly."
+                "> -  <:name:1566128213858459848> Please be respectful and don't spam in your ticket. We will be with you shortly."
             ),
             discord.ui.Separator(visible=True, spacing=small),
             discord.ui.TextDisplay(
@@ -785,6 +762,153 @@ def format_ticket_details(kind: str, fields: dict[str, str] | None) -> str:
     return "Please describe what you need below — a member of staff will be with you shortly."
 
 
+ARROW = "<:arrow4:1566128213858459848>"
+BULLET = "<:name:1566128213858459848>"
+
+# "Type" shown in the new panel for the support-style tickets.
+TICKET_TYPE_LABELS = {
+    "owner": "Contact Owner",
+    "manager": "Management Team",
+    "general": "General Support",
+    "technical": "Technical Issue",
+    "billing": "Payment Issue",
+    "replacement": "Replacement",
+}
+
+
+def _ticket_banner_url() -> str | None:
+    return getattr(config, "TICKET_PANEL_BANNER_URL", None) or getattr(config, "PURCHASE_TICKET_BANNER_URL", None)
+
+
+def _build_new_ticket_panel(
+    channel_id: int,
+    customer: discord.Member,
+    claimed_by: int | None,
+    info_lines: list[str],
+) -> discord.ui.LayoutView:
+    """Shared layout of the new ticket panel. Same buttons/handlers as every
+    other ticket — only label/emoji/style are restyled. "Claimed By" is added
+    only once a staff member has claimed the ticket."""
+    small = discord.SeparatorSpacing.small
+
+    def sep() -> discord.ui.Separator:
+        return discord.ui.Separator(visible=True, spacing=small)
+
+    info_lines = list(info_lines)
+    if claimed_by:
+        info_lines.append(f"> {ARROW} **Claimed By:** <@{claimed_by}>")
+
+    claim = ClaimButton(channel_id, claimed_by)
+    claim.item.label = "〃 Claimed" if claimed_by else "〃 Claim"
+    claim.item.style = discord.ButtonStyle.secondary
+    claim.item.emoji = discord.PartialEmoji(name="name", id=1566450319351611504)
+
+    modify = ModifyButton(channel_id)
+    modify.item.label = "〃 Modify "
+    modify.item.emoji = discord.PartialEmoji(name="name", id=1545577232922312734)
+
+    ping = PingButton(channel_id)
+    ping.item.label = "〃 Ping User"
+    ping.item.emoji = discord.PartialEmoji(name="name", id=1566453919842836520)
+
+    close = CloseButton(channel_id)
+    close.item.label = "〃 Close "
+    close.item.style = discord.ButtonStyle.secondary
+    close.item.emoji = discord.PartialEmoji(name="name", id=1566453862343385289)
+
+    children: list = [sep()]
+    banner = _ticket_banner_url()
+    if banner:
+        children += [discord.ui.MediaGallery(discord.MediaGalleryItem(banner)), sep()]
+    children += [
+        discord.ui.TextDisplay(f"# <:name:1566455107329982464> 〃 __Welcome - {customer.mention}__ "),
+        sep(),
+        discord.ui.TextDisplay(
+            "<:Dot:1545576267904974859> Describe to us how we can help you and we will be with you shortly. "
+        ),
+        sep(),
+        discord.ui.TextDisplay("## <:name:1545553071872933898> 〃 **__Ticket Info__**"),
+        sep(),
+        discord.ui.TextDisplay("\n".join(info_lines)),
+        sep(),
+        discord.ui.ActionRow(claim, modify, ping, close),
+        sep(),
+        discord.ui.TextDisplay(
+            "<:name:1545831836339409048> 〃 **GlobalBots™, All Rights Reserved ©** "
+            "<:name:1545576267904974859> **Ticket  Center** "
+        ),
+        sep(),
+    ]
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(discord.ui.Container(*children, accent_colour=0x0068FA))
+    return view
+
+
+def build_purchase_ticket_view(
+    channel_id: int,
+    customer: discord.Member,
+    fields: dict[str, str] | None,
+    claimed_by: int | None,
+) -> discord.ui.LayoutView:
+    """Purchase tickets: Product / Status (plan) / Payment Method."""
+    fields = fields or {}
+    return _build_new_ticket_panel(
+        channel_id, customer, claimed_by,
+        [
+            f"> {ARROW} **Opened By:** {customer.mention}",
+            f"> {ARROW} **Type:** Purchase",
+            f"> {BULLET} **Product:** {fields.get('bot_type') or '-'}",
+            f"> {BULLET} **Status:** {fields.get('plan') or '-'}",
+            f"> {BULLET} **Payment Method:** {fields.get('payment_method') or '-'}",
+        ],
+    )
+
+
+def build_order_ticket_view(
+    channel_id: int,
+    customer: discord.Member,
+    fields: dict[str, str] | None,
+    claimed_by: int | None,
+) -> discord.ui.LayoutView:
+    """Order tickets: Budget / Server / Payment Method / Description."""
+    fields = fields or {}
+    description = (fields.get("description") or "-").strip() or "-"
+    description = description.replace("\n", "\n> ")
+    return _build_new_ticket_panel(
+        channel_id, customer, claimed_by,
+        [
+            f"> {ARROW} **Opened By:** {customer.mention}",
+            f"> {ARROW} **Type:** Order",
+            f"> {ARROW} **Budget:** {fields.get('budget') or '-'}",
+            f"> {ARROW} **Server:** {fields.get('server') or '-'}",
+            f"> {ARROW} **Payment Method:** {fields.get('payment_method') or '-'}",
+            f"> {ARROW} **Description:** {description}",
+        ],
+    )
+
+
+def build_support_ticket_view(
+    channel_id: int,
+    kind: str,
+    customer: discord.Member,
+    fields: dict[str, str] | None,
+    claimed_by: int | None,
+) -> discord.ui.LayoutView:
+    """Owner / Management / General / Technical / Payment / Replacement:
+    Opened By / Type / Description (what the customer wrote in the modal)."""
+    fields = fields or {}
+    description = (fields.get("description") or "-").strip() or "-"
+    description = description.replace("\n", "\n> ")
+    return _build_new_ticket_panel(
+        channel_id, customer, claimed_by,
+        [
+            f"> {ARROW} **Opened By:** {customer.mention}",
+            f"> {ARROW} **Type:** {TICKET_TYPE_LABELS.get(kind, kind.title())}",
+            f"> {ARROW} **Description:** {description}",
+        ],
+    )
+
+
 def build_ticket_control_view(
     channel_id: int,
     kind: str,
@@ -792,39 +916,11 @@ def build_ticket_control_view(
     fields: dict[str, str] | None,
     claimed_by: int | None,
 ) -> discord.ui.LayoutView:
-    view = discord.ui.LayoutView(timeout=None)
-
-    title = TICKET_TITLES.get(kind, kind.title())
-
-    # discord.ui.Section allows at most 3 text children, so the details are
-    # grouped into a single block instead of one TextDisplay per line.
-    header = discord.ui.TextDisplay(f"**{title}**\nCustomer: {customer.mention}")
-    details = discord.ui.TextDisplay(format_ticket_details(kind, fields))
-
-    texts = [header, details]
-    if claimed_by:
-        texts.append(discord.ui.TextDisplay(f"Claimed by: <@{claimed_by}>"))
-
-    section = discord.ui.Section(
-        *texts,
-        accessory=discord.ui.Thumbnail(media=customer.display_avatar.url),
-    )
-
-    action_row = discord.ui.ActionRow(
-        ClaimButton(channel_id, claimed_by),
-        PingButton(channel_id),
-        ModifyButton(channel_id),
-        CloseButton(channel_id),
-    )
-
-    container = discord.ui.Container(
-        section,
-        discord.ui.Separator(),
-        action_row,
-        accent_colour=TICKET_ACCENT_COLOURS.get(kind, discord.Colour.blue()),
-    )
-    view.add_item(container)
-    return view
+    if kind == "purchase":
+        return build_purchase_ticket_view(channel_id, customer, fields, claimed_by)
+    if kind == "order":
+        return build_order_ticket_view(channel_id, customer, fields, claimed_by)
+    return build_support_ticket_view(channel_id, kind, customer, fields, claimed_by)
 
 
 async def refresh_ticket_panel(channel: discord.abc.Messageable, bot: discord.Client) -> None:
