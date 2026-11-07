@@ -62,10 +62,13 @@ TICKET_CATEGORIES: dict[str, int] = {
 # --- Unified Ticket Center panel (/send-ticket-center). Replace the URLs with
 # your own images. None = skip that element. ---
 TICKET_CENTER_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
-TICKET_CENTER_THUMBNAIL_URL: str | None = "https://i.imgur.com/kaYAwgW.gif"
+TICKET_CENTER_THUMBNAIL_URL: str | None = "https://i.imgur.com/VeuJpKh.jpeg"
 TICKET_CENTER_FOOTER_GIF_URL: str | None = "https://i.imgur.com/6qASJbL.gif"
 # Target of the "Informations" link button on the panel.
 TICKET_CENTER_INFO_URL: str = "https://discord.com/channels/1544741507049721926/1545533424675197051"
+
+TRANSCRIPT_BANNER_URL: str | None = "https://i.imgur.com/Rr4tGCX.jpeg"
+TRANSCRIPT_LOGO_URL: str | None = "https://i.imgur.com/VeuJpKh.jpeg"
 
 # Logo used by the Informations panel.
 PURCHASE_PANEL_LOGO_URL: str | None = "https://i.imgur.com/VeuJpKh.jpeg"
