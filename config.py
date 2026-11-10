@@ -136,10 +136,66 @@ APPLICATION_QUESTIONS: list = [
     {"text": "Are you aware that it is prohibited to share customers personal information, and that doing so will result in serious penalties?", "type": "yesno"},
 ]
 
-# Application types. Only "developer" exists; its custom_id on the panel
-# button is "app_apply:developer".
+# --- Staff / Manager applications (/panel-staff-applications) ---
+# Same system as the developer application, but TEXT ONLY: no photos, files or
+# image links are accepted or shown. Every setting below is optional: 0 / None
+# falls back to the developer application's setting above.
+STAFF_APPLICATIONS_BANNER_URL: str | None = APPLICATIONS_BANNER_URL
+STAFF_APPLICATIONS_LOGO_URL: str | None = PURCHASE_PANEL_LOGO_URL
+
+# One shared Manager + Staff panel, but each type has its OWN application category and log channel.
+# Fill in the real IDs (0 = fall back to the developer application's setting).
+MANAGER_APPLICATIONS_CATEGORY_ID: int = 1563946311668072498
+MANAGER_APPLICATIONS_LOG_CHANNEL_ID: int = 1569736051121987676
+STAFF_APPLICATIONS_CATEGORY_ID: int = 1563946311668072498
+STAFF_APPLICATIONS_LOG_CHANNEL_ID: int = 1569736085649625158
+
+# Roles given to the applicant when accepted (0 = give no role).
+MANAGER_APPLICATION_ACCEPTED_ROLE_ID: int = ROLE_MANAGER
+STAFF_APPLICATION_ACCEPTED_ROLE_ID: int = ROLE_STAFF
+
+# Questions (Greek + English). Plain string = typed answer; use {"text": ..., "type": "yesno"}
+# for Yes / No buttons.
+MANAGER_QUESTIONS: list = [
+    "Διαθέτετε προηγούμενη εμπειρία σε διοικητική θέση;\n/ Do you have any previous experience in a management position?",
+    "Ποια θεωρείτε τα βασικότερα χαρακτηριστικά ενός επιτυχημένου Manager;\n/ What do you consider the key qualities of a successful Manager?",
+    "Πώς θα διαχειριζόσασταν μια σύγκρουση μεταξύ δύο Staff Members;\n/ How would you handle a conflict between two Staff Members?",
+    "Πώς θα αντιμετωπίζατε ένα μέλος της ομάδας με επανειλημμένα χαμηλή απόδοση;\n/ How would you deal with a team member who consistently underperforms?",
+    "Πώς θα διασφαλίζατε την ομαλή λειτουργία του καταστήματος;\n/ How would you ensure the smooth operation of the shop?",
+    "Πώς θα ενεργούσατε σε περίπτωση σοβαρού προβλήματος χωρίς τη διαθεσιμότητα του Owner;\n/ How would you handle a serious issue if the Owner was unavailable?",
+    "Ποια θα ήταν η πρώτη σας προτεραιότητα κατά την ανάληψη της θέσης Manager;\n/ What would be your first priority upon taking on the Manager position?",
+]
+
+STAFF_QUESTIONS: list = [
+    "Ποια είναι η ηλικία σας και πόσο χρόνο μπορείτε να διαθέσετε καθημερινά;\n/ What is your age, and how much time can you dedicate daily?",
+    "Διαθέτετε προηγούμενη εμπειρία σε αντίστοιχη θέση;\n/ Do you have any previous experience in a similar position?",
+    "Για ποιον λόγο επιθυμείτε να ενταχθείτε στο προσωπικό μας;\n/ Why would you like to join our staff team?",
+    "Πώς θα διαχειριζόσασταν έναν δυσαρεστημένο πελάτη;\n/ How would you handle a dissatisfied customer?",
+    "Πώς θα ενεργούσατε εάν δεν γνωρίζατε την απάντηση σε ερώτημα πελάτη;\n/ How would you respond if you did not know the answer to a customer's question?",
+    "Πώς θα διαχειριζόσασταν μια παραβίαση κανονισμών από συνάδελφό σας;\n/ How would you handle a rule violation committed by another staff member?",
+    "Ποιο θεωρείτε το σημαντικότερο χαρακτηριστικό ενός επαγγελματία Staff Member;\n/ What do you consider the most important quality of a professional Staff Member?",
+]
+
+# Application types. The custom_id on each panel button is "app_apply:<key>".
+# "photos": False turns the photo system off for that type.
 APPLICATION_TYPES: dict[str, dict] = {
-    "developer": {"label": "Developer", "questions": APPLICATION_QUESTIONS},
+    "developer": {"label": "Developer", "questions": APPLICATION_QUESTIONS, "photos": True},
+    "manager": {
+        "label": "Manager",
+        "questions": MANAGER_QUESTIONS,
+        "photos": False,
+        "accepted_role_id": MANAGER_APPLICATION_ACCEPTED_ROLE_ID,
+        "category_id": MANAGER_APPLICATIONS_CATEGORY_ID,
+        "log_channel_id": MANAGER_APPLICATIONS_LOG_CHANNEL_ID,
+    },
+    "staff": {
+        "label": "Staff",
+        "questions": STAFF_QUESTIONS,
+        "photos": False,
+        "accepted_role_id": STAFF_APPLICATION_ACCEPTED_ROLE_ID,
+        "category_id": STAFF_APPLICATIONS_CATEGORY_ID,
+        "log_channel_id": STAFF_APPLICATIONS_LOG_CHANNEL_ID,
+    },
 }
 
 # --- Invites panel (/panel-invites). Banner image URL, or None to skip. ---
