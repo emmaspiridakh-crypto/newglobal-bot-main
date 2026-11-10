@@ -17,6 +17,11 @@ STORE_NAME = "applications"
 LOCKS_STORE = "application_locks"
 
 APP_ACCENT = discord.Colour(0x0084FF)
+APP_TYPE_CHOICES = [
+    app_commands.Choice(name="Developer", value="developer"),
+    app_commands.Choice(name="Manager", value="manager"),
+    app_commands.Choice(name="Staff", value="staff"),
+]
 MAX_FILES = 10  # Discord allows at most 10 attachments per message
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 URL_RE = re.compile(r"https?://[^\s<>]+")
@@ -72,6 +77,17 @@ def _mention(applicant, info: dict) -> str:
 
 def _staff_ids() -> list[int]:
     return list(config.APPLICATION_STAFF_ROLE_IDS)
+
+
+def _photos_enabled(type_key: str) -> bool:
+    """Developer applications accept photos/files/image links; the staff and
+    manager ones are text only ("photos": False in config)."""
+    return config.APPLICATION_TYPES.get(type_key, {}).get("photos", True)
+
+
+def _type_setting(type_key: str, key: str, default):
+    """Per-type override from config.APPLICATION_TYPES (0/None = use default)."""
+    return config.APPLICATION_TYPES.get(type_key, {}).get(key) or default
 
 
 # --------------------------------------------------------------------------
@@ -139,11 +155,78 @@ def build_panel_view() -> ui.LayoutView:
     return view
 
 
+def build_staff_panel_view() -> ui.LayoutView:
+    """Combined Manager + Staff panel (designed in DWEEB). The buttons use the
+    same app_apply:<type> custom_ids as the developer panel."""
+    small = discord.SeparatorSpacing.small
+
+    def sep(spacing=small) -> ui.Separator:
+        return ui.Separator(visible=True, spacing=spacing)
+
+    logo_url = getattr(config, "STAFF_APPLICATIONS_LOGO_URL", None)
+    banner_url = getattr(config, "STAFF_APPLICATIONS_BANNER_URL", None)
+
+    intro = ui.TextDisplay(
+        "> <:name:1545576267904974859> *If you want to become a member of our team as a staff or manager, "
+        "click on the appropriate button that interests you and answer the questions. When you complete "
+        "them, we will review it and inform you of the results.* "
+    )
+
+    children: list = [sep()]
+    if banner_url:
+        children += [ui.MediaGallery(discord.MediaGalleryItem(banner_url)), sep()]
+    children += [
+        ui.TextDisplay("# <:name:1563918477746503830> 〃 **__GlobalBots™ - Applications__**"),
+        sep(),
+        ui.Section(intro, accessory=ui.Thumbnail(logo_url)) if logo_url else intro,
+        sep(discord.SeparatorSpacing.large),
+        ui.TextDisplay(
+            "### <:name:1557694211602513950> 〃 ***__Manager Application__*** \n"
+            "> <:Dot:1545576267904974859> If you believe you can handle a position of high responsibility "
+            "and team management, apply for the manager position."
+        ),
+        sep(),
+        ui.ActionRow(
+            ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="〃 Management ",
+                emoji=discord.PartialEmoji(name="name", id=1557694211602513950),
+                custom_id="app_apply:manager",
+            ),
+        ),
+        sep(),
+        ui.TextDisplay(
+            "### <:name:1545577020669427752> 〃 ***__Staff Application__*** \n"
+            "> <:Dot:1545576267904974859> If you believe you can be active, assist with supports and tickets, "
+            "and help keep the server organized, apply for a staff position."
+        ),
+        sep(),
+        ui.ActionRow(
+            ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="〃 Staff",
+                emoji=discord.PartialEmoji(name="name", id=1545577020669427752),
+                custom_id="app_apply:staff",
+            ),
+        ),
+        sep(),
+        ui.TextDisplay(
+            "<:name:1545831836339409048> 〃 **GlobalBots™, All Rights Reserved ©** "
+            "<:name:1545576267904974859> **Application System** "
+        ),
+        sep(),
+    ]
+
+    view = ui.LayoutView(timeout=None)
+    view.add_item(ui.Container(*children, accent_colour=0x0099FF))
+    return view
+
+
 # --------------------------------------------------------------------------
 # Answers rendering (shared by the review message and "Show Answers")
 # --------------------------------------------------------------------------
 
-def _add_answers(container: ui.Container, questions: list, answers: list[dict]) -> None:
+def _add_answers(container: ui.Container, questions: list, answers: list[dict], photos: bool = True) -> None:
     """Adds every question + answer to the container. Uploaded files are
     referenced as attachment://<review_filename>, so the message they are
     shown in must carry those files."""
@@ -159,14 +242,15 @@ def _add_answers(container: ui.Container, questions: list, answers: list[dict]) 
             block += f"\n{body}"
         add_text(container, block)
 
-        files = ans.get("files", [])
+        files = ans.get("files", []) if photos else []
         shown = [f for f in files if f.get("review_filename")]
 
         gallery = [
             discord.MediaGalleryItem(media=f"attachment://{f['review_filename']}")
             for f in shown if _is_image(f)
         ]
-        gallery += [discord.MediaGalleryItem(media=url) for url in _image_links(full_text)]
+        if photos:
+            gallery += [discord.MediaGalleryItem(media=url) for url in _image_links(full_text)]
         if gallery:
             container.add_item(ui.MediaGallery(*gallery[:10]))
 
@@ -211,21 +295,37 @@ class Applications(commands.Cog):
         await interaction.channel.send(view=build_panel_view())
         await interaction.response.send_message("Panel sent.", ephemeral=True)
 
-    @app_commands.command(name="lockapplications", description="Close the applications (nobody can apply)")
+    @app_commands.command(name="panel-staff-applications", description="Send the Staff / Manager Application panel")
     @slash_is_ownership_only()
-    async def lockapplications(self, interaction: discord.Interaction):
+    async def panel_staff_applications(self, interaction: discord.Interaction):
+        await interaction.channel.send(view=build_staff_panel_view())
+        await interaction.response.send_message("Panel sent.", ephemeral=True)
+
+    @app_commands.command(name="lockapplications", description="Close the applications (nobody can apply)")
+    @app_commands.describe(application="Which application to lock (default: developer)")
+    @app_commands.choices(application=APP_TYPE_CHOICES)
+    @slash_is_ownership_only()
+    async def lockapplications(self, interaction: discord.Interaction,
+                               application: app_commands.Choice[str] | None = None):
+        key = application.value if application else "developer"
         locks = storage.get_store(LOCKS_STORE)
-        locks["developer"] = True
+        locks[key] = True
         storage.save(LOCKS_STORE, locks)
-        await interaction.response.send_message("Applications are now **locked**.", ephemeral=True)
+        label = config.APPLICATION_TYPES[key]["label"]
+        await interaction.response.send_message(f"**{label}** applications are now **locked**.", ephemeral=True)
 
     @app_commands.command(name="unlockapplications", description="Re-open the applications")
+    @app_commands.describe(application="Which application to re-open (default: developer)")
+    @app_commands.choices(application=APP_TYPE_CHOICES)
     @slash_is_ownership_only()
-    async def unlockapplications(self, interaction: discord.Interaction):
+    async def unlockapplications(self, interaction: discord.Interaction,
+                                 application: app_commands.Choice[str] | None = None):
+        key = application.value if application else "developer"
         locks = storage.get_store(LOCKS_STORE)
-        locks["developer"] = False
+        locks[key] = False
         storage.save(LOCKS_STORE, locks)
-        await interaction.response.send_message("Applications are now **unlocked**.", ephemeral=True)
+        label = config.APPLICATION_TYPES[key]["label"]
+        await interaction.response.send_message(f"**{label}** applications are now **unlocked**.", ephemeral=True)
 
     # ---- apply ------------------------------------------------------------
 
@@ -257,10 +357,14 @@ class Applications(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
-        category = guild.get_channel(config.APPLICATIONS_CATEGORY_ID) if config.APPLICATIONS_CATEGORY_ID else None
+        category_id = _type_setting(type_key, "category_id", config.APPLICATIONS_CATEGORY_ID)
+        category = guild.get_channel(category_id) if category_id else None
+        photos = _photos_enabled(type_key)
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            user: discord.PermissionOverwrite(view_channel=True, send_messages=True, attach_files=True, embed_links=True),
+            user: discord.PermissionOverwrite(
+                view_channel=True, send_messages=True, attach_files=photos, embed_links=photos
+            ),
             guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_channels=True),
         }
         for role_id in _staff_ids():
@@ -268,8 +372,9 @@ class Applications(commands.Cog):
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
+        prefix = "application" if type_key == "developer" else f"{type_key}-application"
         channel = await guild.create_text_channel(
-            name=f"application-{_safe_name(user.display_name)}", category=category, overwrites=overwrites
+            name=f"{prefix}-{_safe_name(user.display_name)}", category=category, overwrites=overwrites
         )
 
         store[str(channel.id)] = {
@@ -318,7 +423,11 @@ class Applications(commands.Cog):
         else:
             container = build_base_container(
                 title=title,
-                description=_q_text(q) + "\n\n*Write your answer in this channel. You can also attach photos or files.*",
+                description=_q_text(q) + (
+                    "\n\n*Write your answer in this channel. You can also attach photos or files.*"
+                    if _photos_enabled(type_key)
+                    else "\n\n*Write your answer in this channel.*"
+                ),
                 accent_colour=APP_ACCENT,
             )
         view = ui.LayoutView(timeout=None)
@@ -356,6 +465,7 @@ class Applications(commands.Cog):
             return
 
         text = message.content.strip()
+        photos = _photos_enabled(info["type"])
         files = [
             {
                 "id": a.id,
@@ -364,9 +474,14 @@ class Applications(commands.Cog):
                 "content_type": a.content_type,
                 "size": a.size,
             }
-            for a in message.attachments
+            for a in (message.attachments if photos else [])
         ]
         if not text and not files:
+            if message.attachments:  # text-only application: a bare attachment isn't an answer
+                try:
+                    await message.reply("Please answer this question with **text**.", delete_after=8)
+                except discord.HTTPException:
+                    pass
             return
 
         await self._advance(message.channel, info, {"text": text, "files": files})
@@ -463,7 +578,8 @@ class Applications(commands.Cog):
             return
 
         guild = interaction.guild
-        log_channel = guild.get_channel(config.APPLICATIONS_LOG_CHANNEL_ID) if config.APPLICATIONS_LOG_CHANNEL_ID else None
+        log_channel_id = _type_setting(info["type"], "log_channel_id", config.APPLICATIONS_LOG_CHANNEL_ID)
+        log_channel = guild.get_channel(log_channel_id) if log_channel_id else None
         if not log_channel:
             await interaction.response.send_message(
                 "The applications log channel is not configured. Please contact the staff.", ephemeral=True
@@ -489,7 +605,7 @@ class Applications(commands.Cog):
                 accent_colour=APP_ACCENT,
             )
             add_separator(container)
-            _add_answers(container, questions, info["answers"])
+            _add_answers(container, questions, info["answers"], _photos_enabled(info["type"]))
             add_separator(container)
             accept_btn = ui.Button(label="Accept", style=discord.ButtonStyle.success,
                                    emoji=_btn_emoji("accept"), custom_id=f"app_accept:{channel_id}")
@@ -550,7 +666,7 @@ class Applications(commands.Cog):
         problems: list[str] = []
 
         if accepted:
-            role_id = config.APPLICATION_ACCEPTED_ROLE_ID
+            role_id = _type_setting(info["type"], "accepted_role_id", config.APPLICATION_ACCEPTED_ROLE_ID)
             role = guild.get_role(role_id) if role_id else None
             if role and applicant:
                 try:
@@ -628,7 +744,7 @@ class Applications(commands.Cog):
         questions = config.APPLICATION_TYPES[info["type"]]["questions"]
         container = build_base_container(title="Answers", accent_colour=APP_ACCENT)
         add_separator(container)
-        _add_answers(container, questions, info.get("answers", []))
+        _add_answers(container, questions, info.get("answers", []), _photos_enabled(info["type"]))
         reason = info.get("decision_reason")
         if reason:
             add_separator(container)
